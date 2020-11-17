@@ -2,7 +2,7 @@
     "name": "madmatt/silverstripe-elasticappsearch",
     "description": "Connector module for querying Elastic App Search from SilverStripe CMS",
 
-    "type": "silverstripe-module",
+    "type": "silverstripe-vendormodule",
     "license": "BSD-3-Clause",
     "homepage": "https://github.com/madmatt/silverstripe-elasticappsearch",
 
