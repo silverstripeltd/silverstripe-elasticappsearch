@@ -5,6 +5,19 @@ This is a module that provides services to connect a [SilverStripe CMS](https://
 **Note:** This module only provides the query service that allows you to query Elastic App Search and build search result pages. To index content from a SilverStripe CMS powered website, you should include and configure the [silverstripe/silverstripe-search-service](https://github.com/silverstripe/silverstripe-search-service/) module as well.
 
 ## Installing
+Add the following to your composer.json:
+```json
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:madmatt/silverstripe-elasticappsearch.git"
+        }
+    ]
+}
+```
+
+Then run the following:
 ```shell script
 cd /path/to/your/project-root
 composer require madmatt/silverstripe-elasticappsearch
