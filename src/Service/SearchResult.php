@@ -52,7 +52,7 @@ class SearchResult extends ViewableData
     private $results;
 
     /**
-     * @var ArrayList
+     * @var array
      */
     private $facets;
 
@@ -91,6 +91,18 @@ class SearchResult extends ViewableData
         }
 
         return $this->facets;
+    }
+
+    public function getFacet(string $facet, ?string $name = null)
+    {
+        if (!isset($this->facets)) {
+            $this->facets = $this->extractFacets($this->response);
+        }
+
+        if ($name) {
+            return $this->facets[$facet][$name];
+        }
+        return $this->facets[$facet];
     }
 
     protected function extractResults(array $response): PaginatedList
@@ -161,16 +173,16 @@ class SearchResult extends ViewableData
     }
 
 
-    protected function extractFacets(array $response): ArrayList
+    protected function extractFacets(array $response): array
     {
         $list = [];
         foreach ($response['facets'] as $property => $results) {
             foreach ($results as $result){
-                $list[] = [$property =>[$result['name']] = $result['data']];
+                $list[$property][$result['name']] = $result['data'];
             }
         }
 
-        return ArrayList::create($list);
+        return $list;
     }
 
     /**
