@@ -17,6 +17,11 @@ class SearchQuery
     private $rawFilters;
 
     /**
+     * @var stdClass
+     */
+    private $rawFacets;
+
+    /**
      * @var array
      */
     private $resultFields;
@@ -75,6 +80,21 @@ class SearchQuery
     }
 
     /**
+     * Sets the raw 'facets' attribute for returning metadata related to the search query. See the docs for help:
+     * https://swiftype.com/documentation/app-search/api/search/facets
+     *
+     *
+     * @param stdClass $facets
+     * @return $this
+     */
+
+    public function addRawFacets(stdClass $facets): self
+    {
+        $this->rawFacets = $facets;
+        return $this;
+    }
+
+    /**
      * @param string $field
      * @param string $type
      * @param int $size
@@ -115,6 +135,10 @@ class SearchQuery
 
         if (isset($this->rawFilters)) {
             $query['filters'] = $this->rawFilters;
+        }
+
+        if (isset($this->rawFacets)) {
+            $query['facets'] = $this->rawFacets;
         }
 
         if (isset($this->resultFields)) {
