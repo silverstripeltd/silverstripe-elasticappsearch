@@ -51,6 +51,11 @@ class SearchResult extends ViewableData
      */
     private $results;
 
+    /**
+     * @var ArrayList
+     */
+    private $facets;
+
     private static $casting = [
         'Query' => 'Varchar',
     ];
@@ -74,6 +79,18 @@ class SearchResult extends ViewableData
         }
 
         return $this->results;
+    }
+
+    /**
+     * @return ArrayList
+     */
+    public function getFacets()
+    {
+        if (!isset($this->facets)) {
+            $this->facets = $this->extractFacets($this->response);
+        }
+
+        return $this->facets;
     }
 
     protected function extractResults(array $response): PaginatedList
@@ -141,6 +158,19 @@ class SearchResult extends ViewableData
         $list->setCurrentPage($response['meta']['page']['current']);
 
         return $list;
+    }
+
+
+    protected function extractFacets(array $response): ArrayList
+    {
+        $list = [];
+        foreach ($response['facets'] as $property => $results) {
+            foreach ($results as $result){
+                $list[$property][$result['name']] = $result['data'];
+            }
+        }
+
+        return ArrayList::create($list);
     }
 
     /**
