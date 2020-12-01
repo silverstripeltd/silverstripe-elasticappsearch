@@ -82,9 +82,9 @@ class SearchResult extends ViewableData
     }
 
     /**
-     * @return ArrayList
+     * @return array
      */
-    public function getFacets()
+    public function getFacets(): array
     {
         if (!isset($this->facets)) {
             $this->facets = $this->extractFacets($this->response);
@@ -93,7 +93,13 @@ class SearchResult extends ViewableData
         return $this->facets;
     }
 
-    public function getFacet(string $facet, ?string $name = null)
+    /**
+     * @param string $facet
+     * @param string|null $name
+     *
+     * @return array
+     */
+    public function getFacet(string $facet, ?string $name = null): array
     {
         if (!isset($this->facets)) {
             $this->facets = $this->extractFacets($this->response);
@@ -102,7 +108,8 @@ class SearchResult extends ViewableData
         if ($name) {
             return $this->facets[$facet][$name];
         }
-        return $this->facets[$facet];
+        // If they haven't specified an index, we can assume they want the first (only) one
+        return $this->facets[$facet][0];
     }
 
     protected function extractResults(array $response): PaginatedList
@@ -172,13 +179,16 @@ class SearchResult extends ViewableData
         return $list;
     }
 
-
+    /**
+     * @param array $response
+     * @return array
+     */
     protected function extractFacets(array $response): array
     {
         $list = [];
         foreach ($response['facets'] as $property => $results) {
-            foreach ($results as $result){
-                $list[$property][$result['name']] = $result['data'];
+            foreach ($results as $index => $result){
+                $list[$property][$result['name'] ?? $index] = $result['data'];
             }
         }
 
