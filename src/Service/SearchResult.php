@@ -166,7 +166,7 @@ class SearchResult extends ViewableData
         $list = [];
         foreach ($response['facets'] as $property => $results) {
             foreach ($results as $result){
-                $list[$property][$result['name']] = $result['data'];
+                $list[] = [$property =>[$result['name']] = $result['data']];
             }
         }
 

@@ -64,6 +64,36 @@ $query->addRawFilters($filters);
 // Lots more examples are available here: https://swiftype.com/documentation/app-search/api/search/filters
 ```
 
+### Add Facets to your results
+You can return metadata related to your results by adding raw App Search facets to `SearchQuery` via the `addRawFacets()` method. Like [filters](#filtering-results), these should be passed in as a `stdClass` in the format that the [elastic/app-search-php module expects](https://swiftype.com/documentation/app-search/api/search/facets). An example below:
+
+```php
+use SilverStripe\Core\Injector\Injector,
+    Madmatt\ElasticAppSearch\Query\SearchQuery;
+
+$facets = new stdClass();
+
+// what property you would like to return information on
+$facets->taxonomy_terms = [];
+
+$facets->taxonomy_terms[] = (object) [
+    'type' => 'value', // this will essentially return a count
+    'name' => 'topics', // [Optional] a name for this facet, in case you want to return multiple facets on the same property
+    'sort' => (object) ['count' => 'desc'], // [Optional] can also be sorted by value (say, alphabetically)
+    'size' => 250, // [Optional] the maximum amount returned, max 250, default 10
+];
+
+// Apply the facets:
+$query = Injector::inst()->get(SearchQuery::class);
+$query->addRawFacets($facets);
+```
+
+You can access these values via the `->getFacets()` method on `SearchResult`, it will return it in the following format (using the above example):
+
+```php
+//@TODO fill this out
+```
+
 ### Adding result fields
 [Result Fields](https://swiftype.com/documentation/app-search/api/search/result-fields) are convenient ways to ask Elastic to return contextual information on why a document was returned in search results. This is often known as 'context highlighting' or 'excerpt content'. For example, a search for `test` would return the following result field for the page title if requested: `This is a <em>test</em> page`.
 
