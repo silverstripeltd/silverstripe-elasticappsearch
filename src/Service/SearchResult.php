@@ -190,10 +190,18 @@ class SearchResult extends ViewableData
         $list = ArrayList::create();
         foreach ($response['facets'] as $property => $results) {
             foreach ($results as $index => $result){
+                $data = ArrayList::create();
+                foreach ($result['data'] as $resultData) {
+                    $data->push([
+                        'Value' => $resultData['value'],
+                        'Count' => $resultData['count'],
+                    ]);
+                }
+
                 $list[] = ArrayData::create([
                     'Property' => $property,
                     'Name' => $result['name'] ?? $index,
-                    'Data' => ArrayList::create($result['data'])
+                    'Data' => $data,
                 ]);
             }
         }
