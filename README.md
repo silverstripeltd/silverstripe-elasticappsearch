@@ -88,42 +88,21 @@ $query = Injector::inst()->get(SearchQuery::class);
 $query->addRawFacets($facets);
 ```
 
-You can access these values via the `->getFacets()` method on `SearchResult`, it will return it in the following format (using the above example):
-
-```php
-[
-    'taxonomy_terms' =>
-        [
-            'topics' => [
-                0 => [
-                    'value' => 8,
-                    'count' => 23
-                ],
-                1 => [
-                    'value' => 1,
-                    'count' => 21
-                ],
-            ]
-        ]
-];
-```
-
-Alternatively, to get one particular facet, you can use the `->getFacet()` method. In this case , `->getFacet('taxonomy_terms', 'topics')` would return:
-
-```php
-[
-    0 => [
-        'value' => 8,
-        'count' => 23
-    ],
-    1 => [
-        'value' => 1,
-        'count' => 21
-    ]
-];
-```
+You can access these values via the `->getFacets()` method on `SearchResult`, it will return it in an `ArrayList`, or to get one particular facet, you can use the `->getFacet()` method. In this case , `->getFacet('taxonomy_terms', 'topics')`.
 
 *Note: if you don't use the name parameter when creating the query, it will be returned as index `0` - you can access this by omitting the second parameter to `->getFacet()` i.e. `->getFacet('taxonomy_terms')`*
+
+You can also use these values in templates:
+
+```html
+<% loop $SearchResults.Facets %>
+    <h1>$Name</h1>
+    <h4>$Property</h4>
+    <% loop $Data %>
+        <p>$Value was returned $Count times</p>
+    <% end_loop %>
+<% end_loop %>
+```
 
 ### Adding result fields
 [Result Fields](https://swiftype.com/documentation/app-search/api/search/result-fields) are convenient ways to ask Elastic to return contextual information on why a document was returned in search results. This is often known as 'context highlighting' or 'excerpt content'. For example, a search for `test` would return the following result field for the page title if requested: `This is a <em>test</em> page`.
