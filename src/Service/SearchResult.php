@@ -52,7 +52,7 @@ class SearchResult extends ViewableData
     private $results;
 
     /**
-     * @var array
+     * @var ArrayList
      */
     private $facets;
 
@@ -81,10 +81,7 @@ class SearchResult extends ViewableData
         return $this->results;
     }
 
-    /**
-     * @return array
-     */
-    public function getFacets(): array
+    public function getFacets(): ArrayList
     {
         if (!isset($this->facets)) {
             $this->facets = $this->extractFacets($this->response);
@@ -96,20 +93,25 @@ class SearchResult extends ViewableData
     /**
      * @param string $facet
      * @param string|null $name
-     *
-     * @return array
      */
-    public function getFacet(string $facet, ?string $name = null): array
+    public function getFacet(string $facet, ?string $name = null): ArrayList
     {
         if (!isset($this->facets)) {
             $this->facets = $this->extractFacets($this->response);
         }
 
-        if ($name) {
-            return $this->facets[$facet][$name];
+        $filtered = $this->facets->filter(
+            [
+                'Property' => $facet,
+                'Name' => $name ?? 0,
+            ]
+        )->first();
+
+        if ($filtered && $filtered->exists()) {
+            return $filtered->Data;
         }
-        // If they haven't specified an index, we can assume they want the first (only) one
-        return $this->facets[$facet][0];
+
+        return ArrayList::create();
     }
 
     protected function extractResults(array $response): PaginatedList
@@ -181,14 +183,18 @@ class SearchResult extends ViewableData
 
     /**
      * @param array $response
-     * @return array
+     * @return ArrayList
      */
-    protected function extractFacets(array $response): array
+    protected function extractFacets(array $response): ArrayList
     {
-        $list = [];
+        $list = ArrayList::create();
         foreach ($response['facets'] as $property => $results) {
             foreach ($results as $index => $result){
-                $list[$property][$result['name'] ?? $index] = $result['data'];
+                $list[] = ArrayData::create([
+                    'Property' => $property,
+                    'Name' => $result['name'] ?? $index,
+                    'Data' => ArrayList::create($result['data'])
+                ]);
             }
         }
 
