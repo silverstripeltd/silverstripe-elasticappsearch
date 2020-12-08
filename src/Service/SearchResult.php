@@ -51,6 +51,11 @@ class SearchResult extends ViewableData
      */
     private $results;
 
+    /**
+     * @var ArrayList
+     */
+    private $facets;
+
     private static $casting = [
         'Query' => 'Varchar',
     ];
@@ -74,6 +79,39 @@ class SearchResult extends ViewableData
         }
 
         return $this->results;
+    }
+
+    public function getFacets(): ArrayList
+    {
+        if (!isset($this->facets)) {
+            $this->facets = $this->extractFacets($this->response);
+        }
+
+        return $this->facets;
+    }
+
+    /**
+     * @param string $facet
+     * @param string|null $name
+     */
+    public function getFacet(string $facet, ?string $name = null): ArrayList
+    {
+        if (!isset($this->facets)) {
+            $this->facets = $this->extractFacets($this->response);
+        }
+
+        $filtered = $this->facets->filter(
+            [
+                'Property' => $facet,
+                'Name' => $name ?? 0,
+            ]
+        )->first();
+
+        if ($filtered && $filtered->exists()) {
+            return $filtered->Data;
+        }
+
+        return ArrayList::create();
     }
 
     protected function extractResults(array $response): PaginatedList
@@ -139,6 +177,34 @@ class SearchResult extends ViewableData
         $list->setPageLength($response['meta']['page']['size']);
         $list->setTotalItems($response['meta']['page']['total_results']);
         $list->setCurrentPage($response['meta']['page']['current']);
+
+        return $list;
+    }
+
+    /**
+     * @param array $response
+     * @return ArrayList
+     */
+    protected function extractFacets(array $response): ArrayList
+    {
+        $list = ArrayList::create();
+        foreach ($response['facets'] as $property => $results) {
+            foreach ($results as $index => $result){
+                $data = ArrayList::create();
+                foreach ($result['data'] as $resultData) {
+                    $data->push([
+                        'Value' => $resultData['value'],
+                        'Count' => $resultData['count'],
+                    ]);
+                }
+
+                $list[] = ArrayData::create([
+                    'Property' => $property,
+                    'Name' => $result['name'] ?? $index,
+                    'Data' => $data,
+                ]);
+            }
+        }
 
         return $list;
     }

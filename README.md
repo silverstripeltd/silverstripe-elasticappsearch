@@ -64,6 +64,46 @@ $query->addRawFilters($filters);
 // Lots more examples are available here: https://swiftype.com/documentation/app-search/api/search/filters
 ```
 
+### Add Facets to your results
+You can return metadata related to your results by adding raw App Search facets to `SearchQuery` via the `addRawFacets()` method. Like [filters](#filtering-results), these should be passed in as a `stdClass` in the format that the [elastic/app-search-php module expects](https://swiftype.com/documentation/app-search/api/search/facets). An example below:
+
+```php
+use SilverStripe\Core\Injector\Injector,
+    Madmatt\ElasticAppSearch\Query\SearchQuery;
+
+$facets = new stdClass();
+
+// what property you would like to return information on
+$facets->taxonomy_terms = [];
+
+$facets->taxonomy_terms[] = (object) [
+    'type' => 'value', // this will essentially return a count
+    'name' => 'topics', // [Optional] a name for this facet, in case you want to return multiple facets on the same property
+    'sort' => (object) ['count' => 'desc'], // [Optional] can also be sorted by value (say, alphabetically)
+    'size' => 250, // [Optional] the maximum amount returned, max 250, default 10
+];
+
+// Apply the facets:
+$query = Injector::inst()->get(SearchQuery::class);
+$query->addRawFacets($facets);
+```
+
+You can access these values via the `->getFacets()` method on `SearchResult`, it will return it in an `ArrayList`, or to get one particular facet, you can use the `->getFacet()` method. In this case , `->getFacet('taxonomy_terms', 'topics')`.
+
+*Note: if you don't use the name parameter when creating the query, it will be returned as index `0` - you can access this by omitting the second parameter to `->getFacet()` i.e. `->getFacet('taxonomy_terms')`*
+
+You can also use these values in templates:
+
+```html
+<% loop $SearchResults.Facets %>
+    <h1>$Name</h1>
+    <h4>$Property</h4>
+    <% loop $Data %>
+        <p>$Value was returned $Count times</p>
+    <% end_loop %>
+<% end_loop %>
+```
+
 ### Adding result fields
 [Result Fields](https://swiftype.com/documentation/app-search/api/search/result-fields) are convenient ways to ask Elastic to return contextual information on why a document was returned in search results. This is often known as 'context highlighting' or 'excerpt content'. For example, a search for `test` would return the following result field for the page title if requested: `This is a <em>test</em> page`.
 
