@@ -29,6 +29,11 @@ class SearchQuery
     /**
      * @var array
      */
+    private $sort;
+
+    /**
+     * @var array
+     */
     private $searchFields;
 
     /**
@@ -95,6 +100,40 @@ class SearchQuery
     }
 
     /**
+     * Add a sort method to the list, see:
+     * https://www.elastic.co/guide/en/app-search/current/sort.html
+     *
+     * @param string $fieldName
+     * @param string $direction valid values are asc/desc
+     * @return $this
+     */
+    public function addSort(string $fieldName, string $direction = 'asc') : self
+    {
+        if (!isset($this->sort)) {
+            $this->sort = [];
+        }
+
+        $this->sort[] = [$fieldName => strtolower($direction)];
+
+        return $this;
+    }
+
+    /**
+     * Adds multiple sort methods at once
+     *
+     * @param array $sortMethods [$fieldname => $direction]
+     * @return $this
+     */
+    public function addSorts(array $sortMethods): self
+    {
+        foreach ($sortMethods as $fieldName => $direction) {
+            $this->addSort($fieldName, $direction);
+        }
+
+        return $this;
+    }
+
+    /**
      * @param string $field
      * @param string $type
      * @param int $size
@@ -125,7 +164,7 @@ class SearchQuery
     }
 
     /**
-     * Returns the string representation of the seach params of this query, ready for sending to Elastic.
+     * Returns the string representation of the search params of this query, ready for sending to Elastic.
      *
      * @return array
      */
@@ -139,6 +178,10 @@ class SearchQuery
 
         if (isset($this->rawFacets)) {
             $query['facets'] = $this->rawFacets;
+        }
+
+        if (isset($this->sort)) {
+            $query['sort'] = $this->getSortForArray();
         }
 
         if (isset($this->resultFields)) {
@@ -226,5 +269,19 @@ class SearchQuery
         }
 
         return $searchFields;
+    }
+
+    private function getSortForArray(): ?array
+    {
+        $sort = null;
+
+        if (!isset($this->sort)) {
+            return null;
+        }
+
+        // finally sort by score as a fallback
+        $this->sort[] = ['_score' => 'desc'];
+
+        return $this->sort;
     }
 }
