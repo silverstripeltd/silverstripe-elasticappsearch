@@ -133,6 +133,32 @@ $query->addSearchField('content'); // Don't specify a weight for content, the de
 $query->addSearchField('title', 10); // Make title the most relevant field
 ```
 
+### Sorting Results
+
+The default sort is `_score`, which is essentially relevance. You can
+add one or more sorts to help organise your results via the `SearchQuery` class:
+
+```php
+$query = Injector::inst()->get(SearchQuery::class);
+// For a single sort, just pass the field and direction to addSort()
+$query->addSort('publication_date', 'asc');
+
+// For multiple sorts, pass an array to addSorts()
+$query->addSorts([
+    'publication_date' => 'desc',
+    'title' => 'asc',
+]);
+```
+
+If you add any sort at all, a final sort of `'_score' => 'desc'` is
+appended to the end as the final tiebreaker.
+
+*Note: You cannot sort on a Geolocation field*
+
+See [the Elastic documentation](https://www.elastic.co/guide/en/app-search/current/sort.html) for more details.
+
+
+
 ### Pagination
 By default, this module automatically handles the pagination of results for you, provided you use the built-in `PaginatedList` class (used by default). However, if you want to override this, you can call `$query->setPagination($pageSize, $pageNum)` to configure it directly.
 
