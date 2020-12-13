@@ -280,7 +280,9 @@ class SearchQuery
         }
 
         // finally sort by score as a fallback
-        $this->sort[] = ['_score' => 'desc'];
+        if (!in_array(['_score' => 'desc'], $this->sort)) {
+            $this->sort[] = ['_score' => 'desc'];
+        }
 
         return $this->sort;
     }

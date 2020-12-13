@@ -16,6 +16,7 @@ class SearchQueryTest extends SapphireTest
 
     public static function setUpBeforeClass()
     {
+        parent::setUpBeforeClass();
         self::$serializer = new SmartSerializer();
     }
 
@@ -25,12 +26,6 @@ class SearchQueryTest extends SapphireTest
         $searchQuery = Injector::inst()->create(SearchQuery::class);
         $searchQuery->setQuery('foo');
         $this->assertEquals('foo', $searchQuery->getQuery());
-        $expectedJson = <<<JSON
-{
-    "query": "foo"
-}
-JSON;
-        $this->assertJsonStringEqualsJsonString($expectedJson, self::serializeBody($searchQuery));
     }
 
     public function testSort()
@@ -45,8 +40,10 @@ JSON;
         $this->assertArrayHasKey('sort', $params);
         $this->assertCount(2, $params['sort']);
         $this->assertEquals(['foo' => 'desc'], array_shift($params['sort']));
-        $this->assertEquals(['_sort' => 'desc'], array_pop($params['sort']));
+        $this->assertEquals(['_score' => 'desc'], array_pop($params['sort']));
 
+        /** @var SearchQuery $searchQuery */
+        $searchQuery = Injector::inst()->create(SearchQuery::class);
         $searchQuery->addSorts(
             [
                 'bar' => 'desc',
@@ -55,19 +52,16 @@ JSON;
         );
         $params = $searchQuery->getSearchParamsAsArray();
         $this->assertArrayHasKey('sort', $params);
-        $this->assertCount(4, $params['sort']);
-        $this->assertEquals(['foo' => 'desc'], array_shift($params['sort']));
+        $this->assertCount(3, $params['sort']);
         $this->assertEquals(['bar' => 'desc'], array_shift($params['sort']));
         $this->assertEquals(['baz' => 'asc'], array_shift($params['sort']));
-        $this->assertEquals(['_sort' => 'desc'], array_pop($params['sort']));
+        $this->assertEquals(['_score' => 'desc'], array_pop($params['sort']));
         $expectedJson = <<<JSON
 {
-    "query": "",
     "sort": [
-        {"foo": "desc"},
         {"bar": "desc"},
         {"baz": "asc"},
-        {"_sort": "desc"}
+        {"_score": "desc"}
     ]
 }
 JSON;
