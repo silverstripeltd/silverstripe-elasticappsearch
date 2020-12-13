@@ -34,6 +34,10 @@ class SearchQueryTest extends SapphireTest
         $searchQuery = Injector::inst()->create(SearchQuery::class);
         $params = $searchQuery->getSearchParamsAsArray();
         $this->assertArrayNotHasKey('sort', $params);
+        $expectedJson = <<<JSON
+{}
+JSON;
+        $this->assertJsonStringEqualsJsonString($expectedJson, self::serializeBody($searchQuery));
 
         $searchQuery->addSort('foo', 'desc');
         $params = $searchQuery->getSearchParamsAsArray();
@@ -41,6 +45,37 @@ class SearchQueryTest extends SapphireTest
         $this->assertCount(2, $params['sort']);
         $this->assertEquals(['foo' => 'desc'], array_shift($params['sort']));
         $this->assertEquals(['_score' => 'desc'], array_pop($params['sort']));
+        $expectedJson = <<<JSON
+{
+    "sort": [
+        {"foo": "desc"},
+        {"_score": "desc"}
+    ]
+}
+JSON;
+        $this->assertJsonStringEqualsJsonString($expectedJson, self::serializeBody($searchQuery));
+
+        /** @var SearchQuery $searchQuery */
+        $searchQuery = Injector::inst()->create(SearchQuery::class);
+        $searchQuery->addSort('foo', 'desc');
+        $searchQuery->addSort('qux');
+        $params = $searchQuery->getSearchParamsAsArray();
+        $this->assertArrayHasKey('sort', $params);
+        $this->assertCount(3, $params['sort']);
+        $this->assertEquals(['foo' => 'desc'], array_shift($params['sort']));
+        $this->assertEquals(['qux' => 'asc'], array_shift($params['sort']));
+        $this->assertEquals(['_score' => 'desc'], array_pop($params['sort']));
+        $expectedJson = <<<JSON
+{
+    "sort": [
+        {"foo": "desc"},
+        {"qux": "asc"},
+        {"_score": "desc"}
+    ]
+}
+JSON;
+        $this->assertJsonStringEqualsJsonString($expectedJson, self::serializeBody($searchQuery));
+
 
         /** @var SearchQuery $searchQuery */
         $searchQuery = Injector::inst()->create(SearchQuery::class);
