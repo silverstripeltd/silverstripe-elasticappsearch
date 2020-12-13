@@ -103,6 +103,78 @@ JSON;
         $this->assertJsonStringEqualsJsonString($expectedJson, self::serializeBody($searchQuery));
     }
 
+    public function testFacets()
+    {
+        /** @var SearchQuery $searchQuery */
+        $searchQuery = Injector::inst()->create(SearchQuery::class);
+        $params = $searchQuery->getSearchParamsAsArray();
+        $this->assertArrayNotHasKey('facets', $params);
+        $expectedJson = <<<JSON
+{}
+JSON;
+        $this->assertJsonStringEqualsJsonString($expectedJson, self::serializeBody($searchQuery));
+
+        $facets = new \stdClass();
+        $facets->foo = [];
+        $facets->foo[] = (object) [
+            'type' => 'value',
+            'name' => 'bar',
+            'sort' => (object) ['count' => 'desc'],
+            'size' => 250,
+        ];
+        $facets->foo[] = (object) [
+            'type' => 'range',
+            'name' => 'baz',
+            'ranges' => [
+                (object) ['from' => 1, 'to' => 100],
+                (object) ['from' => 100],
+            ],
+        ];
+        $facets->qux = [];
+        $facets->qux[] = (object) [
+            'type' => 'value',
+            'name' => 'qit',
+            'sort' => (object) ['count' => 'desc'],
+            'size' => 250,
+        ];
+        $searchQuery->addRawFacets($facets);
+
+        $expectedJson = <<<JSON
+{
+    "facets": {
+        "foo": [
+            {
+                "type": "value",
+                "name": "bar",
+                "sort": { "count": "desc" },
+                "size": 250
+            },
+            {
+                "type": "range",
+                "name": "baz",
+                "ranges": [
+                  { "from": 1, "to": 100 },
+                  { "from": 100 }
+                ]
+            }
+        ],
+        "qux": [
+            {
+                "type": "value",
+                "name": "qit",
+                "sort": { "count": "desc" },
+                "size": 250
+            }
+        ]
+    }
+}
+JSON;
+
+        $this->assertJsonStringEqualsJsonString($expectedJson, self::serializeBody($searchQuery));
+
+
+    }
+
     /*
      * Mimic the method the Elastic Client uses to convert the search params into JSON so we can assert
      * that they look as expected
