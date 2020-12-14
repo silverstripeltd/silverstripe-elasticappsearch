@@ -6,6 +6,7 @@ use InvalidArgumentException;
 use LogicException;
 use Madmatt\ElasticAppSearch\Service\SearchResult;
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\View\ArrayData;
 
 class SearchResultTest extends SapphireTest
 {
@@ -105,7 +106,21 @@ class SearchResultTest extends SapphireTest
             ]
         ]));
         $this->assertNotNull($result->getFacets());
-        $this->assertNotNull($result->getFacet('size'));
+        $this->assertNotNull($sizeFacet = $result->getFacet('size'));
+        $this->assertCount(2, $sizeFacet);
+
+        $sizeFirst = $sizeFacet->first();
+        $this->assertEquals(100, $sizeFirst->To);
+        $this->assertEquals(1, $sizeFirst->From);
+        $this->assertEquals(23, $sizeFirst->Count);
+
+
+        $sizeLast = $sizeFacet->last();
+        $this->assertEquals('', $sizeLast->To);
+        $this->assertEquals(100, $sizeLast->From);
+        $this->assertEquals(66, $sizeLast->Count);
+
+
         $this->assertNotNull($result->getFacet('content_type'));
         $this->assertNotNull($result->getFacet('topic', 'root_topics'));
         $this->assertNotNull($result->getFacet('topic', 'sub_topics'));
