@@ -193,7 +193,9 @@ class SearchResult extends ViewableData
                 $data = ArrayList::create();
                 foreach ($result['data'] as $resultData) {
                     $data->push([
-                        'Value' => $resultData['value'],
+                        'Value' => $resultData['value'] ?? '',
+                        'From' => $resultData['from'] ?? '',
+                        'To' => $resultData['to'] ?? '',
                         'Count' => $resultData['count'],
                     ]);
                 }
