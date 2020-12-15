@@ -280,7 +280,7 @@ class SearchQuery
         }
 
         // finally sort by score as a fallback
-        if (!in_array(['_score' => 'desc'], $this->sort)) {
+        if (empty(array_column($this->sort, '_score'))) {
             $this->sort[] = ['_score' => 'desc'];
         }
 
