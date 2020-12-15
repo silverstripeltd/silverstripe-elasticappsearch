@@ -16,7 +16,8 @@
     "keywords": ["SilverStripe", "SilverStripe CMS", "Elastic", "Elastic App Search"],
 
     "require": {
-        "elastic/app-search": "^7.9"
+        "elastic/app-search": "^7.9",
+        "silverstripe/framework": "^4"
     },
 
     "require-dev": {
