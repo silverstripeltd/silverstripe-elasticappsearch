@@ -30,6 +30,19 @@ class AppSearchGateway
     }
 
     /**
+     * Performs a multisearch of the provided engine with the given queries using the Elastic App Search client.
+     *
+     * @param string $engineName
+     * @param array $queries
+     * @return array
+     */
+    public function multisearch(string $engineName, array $queries)
+    {
+        $client = $this->getClient();
+        return $client->multiSearch($engineName, $queries);
+    }
+
+    /**
      * @throws Exception If either the API endpoint or key aren't defined
      * @return Client
      */

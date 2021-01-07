@@ -3,16 +3,14 @@
 namespace Madmatt\ElasticAppSearch\Service;
 
 use Exception;
-use InvalidArgumentException;
 use Madmatt\ElasticAppSearch\Gateway\AppSearchGateway;
+use Madmatt\ElasticAppSearch\Query\MultiSearchQuery;
 use Madmatt\ElasticAppSearch\Query\SearchQuery;
-use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Injector\Injectable;
-use SilverStripe\Core\Injector\Injector;
 
 class AppSearchService
 {
@@ -79,5 +77,36 @@ class AppSearchService
 
         // Create the new SearchResult object in which to store results, including validating the response
         return SearchResult::create($query->getQuery(), $response);
+    }
+
+    /**
+     * @param MultiSearchQuery $query
+     * @param string $engineName
+     * @param HTTPRequest $request
+     * @throws Exception If the connection to Elastic is not available, index not configured or any other error
+     * @return MultiSearchResult|null
+     */
+    public function multisearch(MultiSearchQuery $query, string $engineName, HTTPRequest $request): ?MultiSearchResult
+    {
+        $cfg = $this->config();
+        $queries = $query->getQueries();
+
+        foreach ($queries as $singleQuery) {
+            if (!$singleQuery->hasPagination()) {
+                $pageNum = $request->getVar($cfg->pagination_getvar) / $cfg->pagination_size ?? 0;
+                $pageNum++; // We do this because PaginatedList uses a zero-based index and App Search is one-based
+                $singleQuery->setPagination($cfg->pagination_size, $pageNum);
+            }
+        }
+
+        $response = $this->gateway->multisearch($engineName, $query->renderQueries());
+
+        // Allow extensions to manipulate the results array before any validation or processing occurs
+        // WARNING: This extension hook is fired before the response is checked for validity, it may not be a valid
+        // response from Elastic App Search. Use caution when modifying the array or assuming any structure exists.
+        $this->extend('augmentMultiSearchResultsPreValidation', $response);
+
+        // Create the new MultiSearchResult object in which to store results, including validating the response
+        return MultiSearchResult::create($query, $response);
     }
 }

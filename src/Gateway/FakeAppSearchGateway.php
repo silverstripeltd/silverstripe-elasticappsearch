@@ -41,6 +41,15 @@ class FakeAppSearchGateway extends AppSearchGateway implements TestOnly
         return json_decode($this->response, true);
     }
 
+    public function multisearch(string $engineName, array $queries)
+    {
+        if (!$this->response) {
+            throw new Exception('Response not set in FakeAppSearchGateway');
+        }
+
+        return json_decode($this->response, true);
+    }
+
     public function setResponseFromFile(string $filename): FakeAppSearchGateway
     {
         $this->setResponse(file_get_contents($filename));
