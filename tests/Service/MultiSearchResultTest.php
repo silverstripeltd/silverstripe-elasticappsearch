@@ -1,11 +1,11 @@
 <?php
 
-namespace Madmatt\ElasticAppSearch\Tests\Service;
+namespace SilverStripe\ElasticAppSearch\Tests\Service;
 
-use Madmatt\ElasticAppSearch\Query\MultiSearchQuery;
-use Madmatt\ElasticAppSearch\Query\SearchQuery;
-use Madmatt\ElasticAppSearch\Service\MultiSearchResult;
-use Madmatt\ElasticAppSearch\Service\SearchResult;
+use SilverStripe\ElasticAppSearch\Query\MultiSearchQuery;
+use SilverStripe\ElasticAppSearch\Query\SearchQuery;
+use SilverStripe\ElasticAppSearch\Service\MultiSearchResult;
+use SilverStripe\ElasticAppSearch\Service\SearchResult;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ORM\ArrayList;

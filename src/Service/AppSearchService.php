@@ -1,11 +1,11 @@
 <?php
 
-namespace Madmatt\ElasticAppSearch\Service;
+namespace SilverStripe\ElasticAppSearch\Service;
 
 use Exception;
-use Madmatt\ElasticAppSearch\Gateway\AppSearchGateway;
-use Madmatt\ElasticAppSearch\Query\MultiSearchQuery;
-use Madmatt\ElasticAppSearch\Query\SearchQuery;
+use SilverStripe\ElasticAppSearch\Gateway\AppSearchGateway;
+use SilverStripe\ElasticAppSearch\Query\MultiSearchQuery;
+use SilverStripe\ElasticAppSearch\Query\SearchQuery;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Config\Configurable;

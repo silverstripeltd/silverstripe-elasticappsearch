@@ -1,17 +1,18 @@
-# madmatt/silverstripe-elasticappsearch
+# silverstripeltd/silverstripe-elasticappsearch
 
 This is a module that provides services to connect a [SilverStripe CMS](https://www.silverstripe.org/) powered website to [Elastic App Search](https://www.elastic.co/enterprise-search).
 
 **Note:** This module only provides the query service that allows you to query Elastic App Search and build search result pages. To index content from a SilverStripe CMS powered website, you should include and configure the [silverstripe/silverstripe-search-service](https://github.com/silverstripe/silverstripe-search-service/) module as well.
 
 ## Installing
+
 Add the following to your composer.json:
 ```json
 {
     "repositories": [
         {
             "type": "vcs",
-            "url": "git@github.com:madmatt/silverstripe-elasticappsearch.git"
+            "url": "git@github.com:silverstripeltd/silverstripe-elasticappsearch.git"
         }
     ]
 }
@@ -20,7 +21,7 @@ Add the following to your composer.json:
 Then run the following:
 ```shell script
 cd /path/to/your/project-root
-composer require madmatt/silverstripe-elasticappsearch
+composer require silverstripeltd/silverstripe-elasticappsearch
 vendor/bin/sake dev/build flush=1
 ``` 
 You may also need to visit `https://your-website.example.com/?flush=1` if you have separate cache sources for cli and web users.
@@ -38,9 +39,10 @@ Specify the keyword (or words) you want to search for using `$query->setQuery('s
 
 ### Filtering results
 You can specify raw App Search filters through to `SearchQuery` using the `addRawFilters()` method. For now, these should be passed in the exact way that the [elastic/app-search-php module expects](https://swiftype.com/documentation/app-search/api/search/filters). An example of this is below:
+
 ```php
 use SilverStripe\Core\Injector\Injector,
-    Madmatt\ElasticAppSearch\Query\SearchQuery;
+    SilverStripe\ElasticAppSearch\Query\SearchQuery;
 
 $filters = new stdClass;
 
@@ -69,7 +71,7 @@ You can return metadata related to your results by adding raw App Search facets 
 
 ```php
 use SilverStripe\Core\Injector\Injector,
-    Madmatt\ElasticAppSearch\Query\SearchQuery;
+    SilverStripe\ElasticAppSearch\Query\SearchQuery;
 
 $facets = new stdClass();
 
@@ -109,7 +111,7 @@ You can also use these values in templates:
 
 ```php
 use SilverStripe\Core\Injector\Injector,
-    Madmatt\ElasticAppSearch\Query\SearchQuery;
+    SilverStripe\ElasticAppSearch\Query\SearchQuery;
 
 // Request an HTML snippet of an indexed field, with an optional maximum character length (default 100, range between 20 and 1000 characters)
 $query = Injector::inst()->get(SearchQuery::class);
@@ -126,7 +128,7 @@ You can optionally specify a weighting to give the text field you want to search
 
 ```php
 use SilverStripe\Core\Injector\Injector,
-    Madmatt\ElasticAppSearch\Query\SearchQuery;
+    SilverStripe\ElasticAppSearch\Query\SearchQuery;
 
 $query = Injector::inst()->get(SearchQuery::class);
 $query->addSearchField('content'); // Don't specify a weight for content, the default will be used
@@ -163,11 +165,12 @@ See [the Elastic documentation](https://www.elastic.co/guide/en/app-search/curre
 By default, this module automatically handles the pagination of results for you, provided you use the built-in `PaginatedList` class (used by default). However, if you want to override this, you can call `$query->setPagination($pageSize, $pageNum)` to configure it directly.
 
 ## Simple example of usage
+
 ```php
 <?php
 
-use Madmatt\ElasticAppSearch\Query\SearchQuery,
-    Madmatt\ElasticAppSearch\Service\AppSearchService,
+use SilverStripe\ElasticAppSearch\Query\SearchQuery,
+    SilverStripe\ElasticAppSearch\Service\AppSearchService,
     SilverStripe\Core\Convert,
     SilverStripe\Core\Injector\Injector,
     SilverStripe\Forms\Form,
@@ -308,9 +311,9 @@ result for the keyword. In this way, I can link to the "file" section if I detec
 results there.
 
 ```php
-use Madmatt\ElasticAppSearch\Query\MultiSearchQuery;
-use Madmatt\ElasticAppSearch\Query\SearchQuery;
-use Madmatt\ElasticAppSearch\Service\AppSearchService;
+use SilverStripe\ElasticAppSearch\Query\MultiSearchQuery;
+use SilverStripe\ElasticAppSearch\Query\SearchQuery;
+use SilverStripe\ElasticAppSearch\Service\AppSearchService;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\SearchService\Services\AppSearch\AppSearchService as SilverStripeAppSearchService;

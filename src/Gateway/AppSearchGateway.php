@@ -1,6 +1,6 @@
 <?php
 
-namespace Madmatt\ElasticAppSearch\Gateway;
+namespace SilverStripe\ElasticAppSearch\Gateway;
 
 use Elastic\AppSearch\Client\Client;
 use Elastic\AppSearch\Client\ClientBuilder;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Madmatt\ElasticAppSearch\Query;
+namespace SilverStripe\ElasticAppSearch\Query;
 
 use stdClass;
 

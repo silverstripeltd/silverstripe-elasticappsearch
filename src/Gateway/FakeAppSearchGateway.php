@@ -1,28 +1,28 @@
 <?php
 
-namespace Madmatt\ElasticAppSearch\Gateway;
+namespace SilverStripe\ElasticAppSearch\Gateway;
 
 use Exception;
 use SilverStripe\Dev\TestOnly;
 
 /**
  * Class FakeAppSearchGateway
- * @package Madmatt\ElasticAppSearch\Gateway
+ * @package SilverStripe\ElasticAppSearch\Gateway
  *
  * This class should not be used in production, it is intended to be used for automated testing purposes.
  *
  * You can inject this into the Service class via Silverstripe dependency injection in your tests:
  *
  * public function setUp() {
- *     $this->gateway = new Madmatt\ElasticAppSearch\Gateway\FakeAppSearchGateway();
- *     Injector::inst()->registerService($this->gateway, Madmatt\ElasticAppSearch\Gateway\AppSearchGateway::class);
+ *     $this->gateway = new SilverStripe\ElasticAppSearch\Gateway\FakeAppSearchGateway();
+ *     Injector::inst()->registerService($this->gateway, SilverStripe\ElasticAppSearch\Gateway\AppSearchGateway::class);
  * }
  *
  * public function testSomething() {
  *     $this->gateway->setResponseFromFile('app/tests/fixtures/searchresults.json');
  *
  *     // The service will get constructed with the FakeAppSearchGateway in place, $response will be the JSON above
- *     $s = SilverStripe\Core\Injector\Injector::inst()->get(Madmatt\ElasticAppSearch\Service\AppSearchService::class);
+ *     $s = SilverStripe\Core\Injector\Injector::inst()->get(SilverStripe\ElasticAppSearch\Service\AppSearchService::class);
  *     $response = $s->search('query'); // Returns objects based on the data provided in searchresults.json
  */
 class FakeAppSearchGateway extends AppSearchGateway implements TestOnly
