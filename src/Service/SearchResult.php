@@ -56,16 +56,22 @@ class SearchResult extends ViewableData
      */
     private $facets;
 
+    /**
+     * @var bool
+     */
+    private $isPartOfMultiSearch = false;
+
     private static $casting = [
         'Query' => 'Varchar',
     ];
 
-    public function __construct(string $query, array $response)
+    public function __construct(string $query, array $response, bool $isPartOfMultiSearch = false)
     {
         parent::__construct();
 
         $this->query = $query;
         $this->response = $response;
+        $this->isPartOfMultiSearch = $isPartOfMultiSearch;
         $this->validateResponse($response);
     }
 
@@ -239,8 +245,8 @@ class SearchResult extends ViewableData
             }
         }
 
-        // Ensure we have a request_id for future reference if needed
-        if (!array_key_exists('request_id', $response['meta'])) {
+        // Ensure we have a request_id for future reference if needed (not included in multi-search results)
+        if (!$this->isPartOfMultiSearch && !array_key_exists('request_id', $response['meta'])) {
             throw new InvalidArgumentException('Expected value for meta.request_id not found');
         }
 
