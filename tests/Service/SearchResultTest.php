@@ -1,12 +1,11 @@
 <?php
 
-namespace Madmatt\ElasticAppSearch\Tests\Service;
+namespace SilverStripe\ElasticAppSearch\Tests\Service;
 
 use InvalidArgumentException;
 use LogicException;
-use Madmatt\ElasticAppSearch\Service\SearchResult;
+use SilverStripe\ElasticAppSearch\Service\SearchResult;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\View\ArrayData;
 
 class SearchResultTest extends SapphireTest
 {

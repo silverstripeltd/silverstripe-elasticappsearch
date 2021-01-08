@@ -1,9 +1,9 @@
 <?php
 
-namespace Madmatt\ElasticAppSearch\Tests\Query;
+namespace SilverStripe\ElasticAppSearch\Tests\Query;
 
 use Elastic\OpenApi\Codegen\Serializer\SmartSerializer;
-use Madmatt\ElasticAppSearch\Query\SearchQuery;
+use SilverStripe\ElasticAppSearch\Query\SearchQuery;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 

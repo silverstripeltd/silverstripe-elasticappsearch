@@ -1,10 +1,10 @@
 {
-    "name": "madmatt/silverstripe-elasticappsearch",
+    "name": "silverstripeltd/silverstripe-elasticappsearch",
     "description": "Connector module for querying Elastic App Search from SilverStripe CMS",
 
     "type": "silverstripe-vendormodule",
     "license": "BSD-3-Clause",
-    "homepage": "https://github.com/madmatt/silverstripe-elasticappsearch",
+    "homepage": "https://github.com/silverstripeltd/silverstripe-elasticappsearch",
 
     "authors": [
         {
@@ -26,7 +26,7 @@
 
     "autoload": {
         "psr-4": {
-            "Madmatt\\ElasticAppSearch\\": "silverstripe-elasticappsearch/src"
+            "SilverStripe\\ElasticAppSearch\\": "silverstripe-elasticappsearch/src"
         }
     }
 }

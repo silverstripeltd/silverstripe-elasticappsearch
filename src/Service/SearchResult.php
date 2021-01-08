@@ -1,12 +1,11 @@
 <?php
 
-namespace Madmatt\ElasticAppSearch\Service;
+namespace SilverStripe\ElasticAppSearch\Service;
 
 use Exception;
 use InvalidArgumentException;
 use LogicException;
 use Psr\Log\LoggerInterface;
-use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataObject;
@@ -18,7 +17,7 @@ use \SilverStripe\View\ViewableData;
 
 /**
  * Class SearchResult
- * @package Madmatt\ElasticAppSearch\Service
+ * @package SilverStripe\ElasticAppSearch\Service
  *
  * Wraps a single Elastic App Search result set. When constructed, all returned documents are retrieved from the local
  * database and stored as DataObjects in the 'results' key for use in templates.
@@ -78,7 +77,7 @@ class SearchResult extends ViewableData
     /**
      * @return PaginatedList
      */
-    public function getResults()
+    public function getResults(): PaginatedList
     {
         if (!isset($this->results)) {
             $this->results = $this->extractResults($this->response);

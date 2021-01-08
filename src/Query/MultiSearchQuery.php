@@ -1,6 +1,6 @@
 <?php
 
-namespace Madmatt\ElasticAppSearch\Query;
+namespace SilverStripe\ElasticAppSearch\Query;
 
 use Psr\Log\LoggerInterface;
 use SilverStripe\Core\Injector\Injector;
