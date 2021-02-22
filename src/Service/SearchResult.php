@@ -173,7 +173,10 @@ class SearchResult extends ViewableData
             // With the DataObject, we can check whether the current user can view it, and add it to our ArrayList if so
             // First check the method 'canViewInSearch', then fallback to regular 'canView'
             $currentUser = Security::getCurrentUser();
-            $canView = $obj->extendedCan('canViewInSearch', $currentUser) || $obj->canView($currentUser);
+            $canView = $obj->extendedCan('canViewInSearch', $currentUser);
+            if ($canView === null) {
+                $canView = $obj->canView($currentUser);
+            }
 
             if ($canView) {
                 $list->push($obj);
