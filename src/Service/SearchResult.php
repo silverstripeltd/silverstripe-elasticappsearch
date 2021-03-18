@@ -56,6 +56,11 @@ class SearchResult extends ViewableData
     private $facets;
 
     /**
+     * @var ArrayList A list of spelling suggestions for the given result set, if enabled
+     */
+    private $spellingSuggestions;
+
+    /**
      * @var bool
      */
     private $isPartOfMultiSearch = false;
@@ -117,6 +122,17 @@ class SearchResult extends ViewableData
         }
 
         return ArrayList::create();
+    }
+    
+    public function getSpellingSuggestions(): ?ArrayList
+    {
+        return $this->spellingSuggestions;
+    }
+    
+    public function setSpellingSuggestions(ArrayList $suggestions): self
+    {
+        $this->spellingSuggestions = $suggestions;
+        return $this;
     }
 
     protected function extractResults(array $response): PaginatedList

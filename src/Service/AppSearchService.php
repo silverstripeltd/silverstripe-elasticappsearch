@@ -2,15 +2,20 @@
 
 namespace SilverStripe\ElasticAppSearch\Service;
 
+use Elasticsearch\ClientBuilder;
 use Exception;
+use LogicException;
+use Psr\Log\LoggerInterface;
+use SilverStripe\Core\Environment;
 use SilverStripe\ElasticAppSearch\Gateway\AppSearchGateway;
+use SilverStripe\ElasticAppSearch\Gateway\ElasticsearchGateway;
 use SilverStripe\ElasticAppSearch\Query\MultiSearchQuery;
 use SilverStripe\ElasticAppSearch\Query\SearchQuery;
-use Psr\Log\LoggerInterface;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\ORM\ArrayList;
 
 class AppSearchService
 {
@@ -32,10 +37,16 @@ class AppSearchService
      */
     private static $pagination_size = 10;
 
-
+    /**
+     * @var bool Enable spellchecking of keywords when zero results are returned. Used in conjunction with YML config
+     * flag "SearchQuery.enable_typo_tolerance = false". See the 'Spelling suggestions' section of the README for more
+     * details.
+     */
+    private static $enable_spellcheck_on_zero_results = false;
 
     private static $dependencies = [
         'gateway' => '%$' . AppSearchGateway::class,
+        'spellcheckService' => '%$' . SpellcheckService::class,
         'logger' => '%$' . LoggerInterface::class . '.errorhandler',
     ];
 
@@ -68,7 +79,7 @@ class AppSearchService
             $query->setPagination($cfg->pagination_size, $pageNum);
         }
 
-        $response = $this->gateway->search($engineName, $query->getQuery(), $query->getSearchParamsAsArray());
+        $response = $this->gateway->search($engineName, $query->getQueryForElastic(), $query->getSearchParamsAsArray());
 
         // Allow extensions to manipulate the results array before any validation or processing occurs
         // WARNING: This extension hook is fired before the response is checked for validity, it may not be a valid
@@ -76,7 +87,15 @@ class AppSearchService
         $this->extend('augmentSearchResultsPreValidation', $response);
 
         // Create the new SearchResult object in which to store results, including validating the response
-        return SearchResult::create($query->getQuery(), $response);
+        $result = SearchResult::create($query->getQuery(), $response);
+
+        // If we want to inject spelling suggestions, do so
+        if ($result->getResults()->TotalItems() == 0 && $this->config()->enable_spellcheck_on_zero_results) {
+            $suggestions = $this->spellcheckService->getSpellingSuggestions($query, $engineName, $request);
+            $result->setSpellingSuggestions($suggestions);
+        }
+
+        return $result;
     }
 
     /**
@@ -108,5 +127,36 @@ class AppSearchService
 
         // Create the new MultiSearchResult object in which to store results, including validating the response
         return MultiSearchResult::create($query, $response);
+    }
+
+    /**
+     * Duplicate of AppSearchService::environmentizeIndex() in silverstripe/silverstripe-search-service to avoid
+     * coupling the two modules together.
+     * 
+     * @param string $indexName The untouched index name. If a variant exists, it will be added to this.
+     * @return string
+     */
+    public function environmentizeIndex(string $indexName): string
+    {
+        $variant = self::config()->index_variant;
+
+        // If $variant starts and ends with a backtick, it's an envvar that needs evaluation
+        if (preg_match('/^`(?<name>[^`]+)`$/', $variant, $matches)) {
+            $envValue = Environment::getEnv($matches['name']);
+            
+            if ($envValue !== false) {
+                $variant = $envValue;
+            } elseif (defined($matches['name'])) {
+                $variant = constant($matches['name']);
+            } else {
+                $variant = null;
+            }
+        }
+        
+        if ($variant) {
+            return sprintf("%s-%s", $variant, $indexName);
+        }
+
+        return $indexName;
     }
 }

@@ -17,7 +17,8 @@
 
     "require": {
         "elastic/app-search": "^7.9",
-        "silverstripe/framework": "^4"
+        "silverstripe/framework": "^4",
+        "mockery/mockery": "^1.2"
     },
 
     "require-dev": {
@@ -28,5 +29,9 @@
         "psr-4": {
             "SilverStripe\\ElasticAppSearch\\": "silverstripe-elasticappsearch/src"
         }
+    },
+
+    "suggest": {
+        "elasticsearch/elasticsearch": "Allows the use of spellcheck (see silverstripe-elasticappsearch README for details)"
     }
 }
