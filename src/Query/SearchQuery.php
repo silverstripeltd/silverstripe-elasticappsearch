@@ -2,10 +2,19 @@
 
 namespace SilverStripe\ElasticAppSearch\Query;
 
+use SilverStripe\Core\Config\Configurable;
 use stdClass;
 
 class SearchQuery
 {
+    use Configurable;
+
+    /**
+     * @var bool Set to false to disable typo tolerance (which will force exact matches for every individual keyword)
+     * @config
+     */
+    private static $enable_typo_tolerance = true;
+
     /**
      * @var string
      */
@@ -66,6 +75,74 @@ class SearchQuery
     public function getQuery(): string
     {
         return $this->query;
+    }
+
+    /**
+     * If typo tolerance is disabled, then we sanitise and transform the keywords searched for into an AND search by
+     * default. If the user has already used some Lucene syntax, then we assume they know what they are doing. This will
+     * (for example) prefix every keyword with '+', and remove any keywords that are considered stopwords by
+     * Elasticsearch (e.g. 'and', 'or').
+     *
+     * @see https://swiftype.com/documentation/app-search/api/search#search-queries
+     *
+     * @return string The query string that Elastic should be sent.
+     */
+    public function getQueryForElastic(): string
+    {
+        // If typo tolerance is enabled, just return the original query as-is with no modification
+        if ($this->config()->enable_typo_tolerance) {
+            return $this->query;
+        }
+
+        // Typo tolerance is disabled, so we need to adjust the query
+        $keywordString = $this->query;
+
+        if (empty($keywordString)) {
+            return '';
+        }
+
+        $keywordString = rtrim($keywordString);
+        $keywordStringWithANDs = '';
+
+        // Don't hack it together if they are doing advanced manoeuvres already
+        $luceneOperators = ['AND', 'OR', 'NOT', '"'];
+        foreach ($luceneOperators as $luceneOperator) {
+            if (strpos($keywordString, $luceneOperator) !== false) {
+                return $keywordString;
+            }
+        }
+
+        // Source: https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-stop-tokenfilter.html#analysis-stop-tokenfilter-stop-words-by-lang
+        // @todo: Assumption here that stopwords are all in English
+        $englishStopWords = [
+            "a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "if", "in", "into", "is",
+            "it", "no", "not", "of", "on", "or", "such", "that", "the", "their", "then", "there",
+            "these", "they", "this", "to", "was", "will", "with"
+        ];
+        
+        foreach (explode(' ', $keywordString) as $keyword) {
+            $prefix = '+';
+
+            // Check again for individual word manipulations
+            if ($keyword[0] === '+' || $keyword[0] === '-') {
+                $prefix = '';
+            }
+
+            // Requiring a stopword to be present _always_ returns zero results
+            // Remove punctuation so that we catch 'No.' being used for number, for example
+            if (in_array(preg_replace("/[^a-z0-9]/", '', strtolower($keyword)), $englishStopWords)) {
+                $prefix = '';
+            }
+
+            // Check there's at least a letter or a number, otherwise requiring just a punctuation mark (e.g. |) breaks
+            if (preg_match('/[A-Za-z]/', $keyword) === 0 && preg_match('/[0-9]/', $keyword) === 0) {
+                $prefix = '';
+            }
+
+            $keywordStringWithANDs .= "{$prefix}{$keyword} ";
+        }
+
+        return rtrim($keywordStringWithANDs, ' ');
     }
 
     /**
