@@ -42,6 +42,12 @@ class AppSearchGateway
         return $client->multiSearch($engineName, $queries);
     }
 
+    public function logClickthrough(string $engineName, string $query, string $documentId, ?string $requestId = null, ?array $tags = null)
+    {
+        $client = $this->getClient();
+        return $client->logClickthrough($engineName, $query, $documentId, $requestId, $tags);
+    }
+
     /**
      * @throws Exception If either the API endpoint or key aren't defined
      * @return Client

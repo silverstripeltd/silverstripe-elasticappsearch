@@ -44,6 +44,14 @@ class AppSearchService
      */
     private static $enable_spellcheck_on_zero_results = false;
 
+    /**
+     * These values are used for analytics clickthrough tracking, where we have to pass some data through the user's browser, so we want to disambiguate the classname from the 'type'.
+     *
+     * @var array Map between FQCN and a human-readable 'type' (e.g. SilverStripe\CMS\Model\SiteTree -> page).
+     * @see _config/analytics.yml
+     */
+    private static $classname_to_type_mapping = [];
+
     private static $dependencies = [
         'gateway' => '%$' . AppSearchGateway::class,
         'spellcheckService' => '%$' . SpellcheckService::class,
@@ -88,6 +96,7 @@ class AppSearchService
 
         // Create the new SearchResult object in which to store results, including validating the response
         $result = SearchResult::create($query->getQuery(), $response);
+        $result->setEngineName($engineName);
 
         // If we want to inject spelling suggestions, do so
         if ($result->getResults()->TotalItems() == 0 && $this->config()->enable_spellcheck_on_zero_results) {
@@ -126,13 +135,57 @@ class AppSearchService
         $this->extend('augmentMultiSearchResultsPreValidation', $response);
 
         // Create the new MultiSearchResult object in which to store results, including validating the response
-        return MultiSearchResult::create($query, $response);
+        $result = MultiSearchResult::create($query, $response);
+        $result->setEngineName($engineName);
+        return $result;
+    }
+
+    /**
+     * @param string $className The FQCN to attempt to map to a human-readable name (e.g. SilverStripe\Security\Member)
+     * @return string The human-readable name, or the original class name if a suitable map can't be found
+     */
+    public function classToType(string $className): string
+    {
+        $map = $this->config()->classname_to_type_mapping;
+
+        if (!array_key_exists($className, $map)) {
+            return $className;
+        }
+
+        return $map[$className];
+    }
+
+    /**
+     * Opposite of @link classToType() above. Takes a type (e.g. page), and returns the associated DataObject
+     * (e.g. SiteTree). If we can't find a match, return null to indicate that we don't know
+     *
+     * @param string $typeOrClass The short human-readable
+     * @return string
+     */
+    public function typeToClass(string $typeOrClass): ?string
+    {
+        $map = $this->config()->classname_to_type_mapping;
+
+        // First check if it's in the map as the full class name
+        if (in_array($typeOrClass, array_keys($map))) {
+            return $map[$typeOrClass];
+        }
+
+        // Check if it's a short name that maps to a class
+        $map = array_flip($map);
+
+        if (in_array($typeOrClass, array_keys($map))) {
+            return $map[$typeOrClass];
+        }
+
+        // If it's not a class name or a short name we recognise, then we assume it's a class name and return it as-is
+        return $typeOrClass;
     }
 
     /**
      * Duplicate of AppSearchService::environmentizeIndex() in silverstripe/silverstripe-search-service to avoid
      * coupling the two modules together.
-     * 
+     *
      * @param string $indexName The untouched index name. If a variant exists, it will be added to this.
      * @return string
      */
@@ -143,7 +196,7 @@ class AppSearchService
         // If $variant starts and ends with a backtick, it's an envvar that needs evaluation
         if (preg_match('/^`(?<name>[^`]+)`$/', $variant, $matches)) {
             $envValue = Environment::getEnv($matches['name']);
-            
+
             if ($envValue !== false) {
                 $variant = $envValue;
             } elseif (defined($matches['name'])) {
@@ -152,7 +205,7 @@ class AppSearchService
                 $variant = null;
             }
         }
-        
+
         if ($variant) {
             return sprintf("%s-%s", $variant, $indexName);
         }

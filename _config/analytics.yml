@@ -1,0 +1,16 @@
+---
+Name: elasticappsearch-analytics
+After: '#rootroutes'
+---
+SilverStripe\ElasticAppSearch\Service\SearchResult:
+  track_clickthroughs: true
+
+SilverStripe\Control\Director:
+  rules:
+    '_click': SilverStripe\ElasticAppSearch\Controller\ClickthroughController
+
+SilverStripe\ElasticAppSearch\Service\AppSearchService:
+  classname_to_type_mapping:
+    'SilverStripe\Assets\File': 'file'
+    'SilverStripe\CMS\Model\SiteTree': 'page'
+    'SilverStripe\Security\Member': 'profile'
