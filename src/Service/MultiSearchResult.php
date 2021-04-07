@@ -56,6 +56,15 @@ class MultiSearchResult extends ViewableData
         $this->validateResponse($response);
     }
 
+    public function setEngineName(string $name): self
+    {
+        foreach ($this->results as $result) {
+            $result->setEngineName($name);
+        }
+
+        return $this;
+    }
+
     /**
      * @param array $response
      * @throws \InvalidArgumentException Thrown if the provided response is not from Elastic, or is missing expected data

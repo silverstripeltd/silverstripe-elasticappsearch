@@ -6,7 +6,11 @@ use Exception;
 use InvalidArgumentException;
 use LogicException;
 use Psr\Log\LoggerInterface;
+use SilverStripe\Control\Controller;
+use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\ElasticAppSearch\Controller\ClickthroughController;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBField;
@@ -29,6 +33,16 @@ class SearchResult extends ViewableData
     private static $dependencies = [
         'logger' => '%$' . LoggerInterface::class . '.errorhandler',
     ];
+
+    /**
+     * Tracking clickthroughs enables Elastic App Search to display analytics for how many queries were 'successful'
+     * (e.g. caused a user to click through to at least one search result), as well as tracking which queries were
+     * 'unsuccessful' (zero clickthroughs). This powers some of the graphs seen in the Analytics section of Elastic App
+     * Search.
+     *
+     * @var bool true to log clickthroughs back to Elastic App Search, false to disable this feature
+     */
+    private static $track_clickthroughs = true;
 
     /**
      * @var LoggerInterface
@@ -64,6 +78,18 @@ class SearchResult extends ViewableData
      * @var bool
      */
     private $isPartOfMultiSearch = false;
+
+    /**
+     * @var string The name of the engine this search result has been returned from. Used for clickthrough tracking.
+     * @see getClickthroughLink()
+     */
+    private $engineName = "";
+
+    /**
+     * @var array A set of tags that are passed through when clickthroughs are tracked.
+     * @see getClickthroughLink()
+     */
+    private $tags = [];
 
     private static $casting = [
         'Query' => 'Varchar',
@@ -135,6 +161,18 @@ class SearchResult extends ViewableData
         return $this;
     }
 
+    public function setEngineName(string $name): self
+    {
+        $this->engineName = $name;
+        return $this;
+    }
+
+    public function setTags(array $tags): self
+    {
+        $this->tags = $tags;
+        return $this;
+    }
+
     protected function extractResults(array $response): PaginatedList
     {
         $list = ArrayList::create();
@@ -182,6 +220,11 @@ class SearchResult extends ViewableData
 
             if (sizeof($snippets) > 0) {
                 $obj->ElasticSnippets = ArrayData::create($snippets);
+            }
+
+            // Build data required to process the clickthrough link
+            if ($this->config()->track_clickthroughs) {
+                $obj->ClickthroughLink = $this->getClickthroughLink($result, $obj);
             }
 
             $this->extend('augmentSearchResult', $obj);
@@ -285,5 +328,47 @@ class SearchResult extends ViewableData
                 }
             }
         }
+    }
+
+    /**
+     * Get the clickthrough link for a given DataObject. This requires a set of data provided by the SearchService
+     * during creation of the object to get context. We then create a JSON object and base64 encode it to get a URL-safe
+     * string that can be inserted in a tracking URL, which will be picked up by the @link ClickthroughController and a
+     * clickthrough registered in Elastic App Search before the user is directed to the search result.
+     *
+     * @return string
+     */
+    private function getClickthroughLink($result, DataObject $dataObject): string
+    {
+        $controllerLink = ClickthroughController::get_base_url();
+        $documentId = isset($result['id']['raw']) ? $result['id']['raw'] : null;
+        $requestId = isset($this->response['meta']['request_id']) ? $this->response['meta']['request_id'] : null;
+
+        $data = [
+            'id' => $dataObject->ID,
+            'type' => $this->dataObjectToShortName($dataObject),
+            'tags' => $this->tags,
+            'query' => $this->query,
+            'requestId' => $requestId,
+            'documentId' => $documentId,
+            'engineName' => $this->engineName,
+        ];
+
+        $linkData = sprintf('?d=%s', base64_encode(json_encode($data)));
+        return Controller::join_links($controllerLink, $linkData);
+    }
+
+    /**
+     * Converts a DataObject into a short string based on the name of the class. Can be overwridden by specifying the
+     * class names you're searching over on AppSearchService (see _config/analytics.yml for some defaults).
+     *
+     * @param DataObject $object The DataObject to look up
+     * @return string Either the human-readable short string, or the FQCN if one can't be found
+     */
+    private function dataObjectToShortName(DataObject $object): string
+    {
+        /** @var AppSearchService $service */
+        $service = Injector::inst()->get(AppSearchService::class);
+        return $service->classToType(DataObject::getSchema()->baseDataClass($object));
     }
 }
