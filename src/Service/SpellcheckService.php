@@ -12,6 +12,7 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ElasticAppSearch\Gateway\ElasticsearchGateway;
 use SilverStripe\ElasticAppSearch\Query\SearchQuery;
 use SilverStripe\ORM\ArrayList;
@@ -89,7 +90,7 @@ class SpellcheckService
             foreach ($suggestionConfig as $indexName => $suggestionData) {
                 if ($this->appSearchService->environmentizeIndex($indexName) == $engineName) {
                     // We have the correct engine, so we want to extract the necessary fields and internal name
-                    $esIndexName = $suggestionData['internal_index_name'];
+                    $esIndexName = $this->getEsIndexName($suggestionData['internal_index_name']);
                     $esSuggestionFields = $suggestionData['fields'];
                 }
             }
@@ -141,6 +142,18 @@ class SpellcheckService
         }
 
         return null;
+    }
+
+    public function setElasticsearchGateway(ElasticsearchGateway $gateway): self
+    {
+        $this->elasticsearchGateway = $gateway;
+        return $this;
+    }
+
+    public function setAppSearchService(AppSearchService $service): self
+    {
+        $this->appSearchService = $service;
+        return $this;
     }
 
     /**
@@ -235,11 +248,13 @@ class SpellcheckService
                         $inserted = false;
 
                         // Loop over existing potential suggestions to find a match
-                        foreach ($potentialSuggestions[$word['text']] as $existingOption) {
+                        for ($i = 0; $i < sizeof($potentialSuggestions[$word['text']]); $i++) {
+                            $existingOption = $potentialSuggestions[$word['text']][$i];
+
                             if ($existingOption['text'] === $option['text']) {
-                                // We already have this word as a suggestion, so compare and overwrite if it's higher
+                                // We already have this word as a suggestion, so compare score & overwrite if higher
                                 if ($option['score'] > $existingOption['score']) {
-                                    $existingOption['score'] = $option['score'];
+                                    $potentialSuggestions[$word['text']][$i]['score'] = $option['score'];
                                 }
 
                                 // Mark as inserted so we don't insert again
@@ -338,7 +353,7 @@ class SpellcheckService
      * @param string $requestedEngineName The Elastic App Search engine name that we expect to find mapped
      * @throws LogicException When any of the above conditions are not satisfied
      */
-    private function ensureSpellcheckAvailable($requestedEngineName)
+    protected function ensureSpellcheckAvailable($requestedEngineName)
     {
         if (!Environment::getEnv('ELASTICSEARCH_CLOUD_ID')) {
             throw new LogicException('Required environment variable ELASTICSEARCH_CLOUD_ID not configured.');
@@ -402,5 +417,14 @@ class SpellcheckService
 
             throw new LogicException($error);
         }
+    }
+
+    /**
+     * @param string $indexName Either the index name, or a backtick-escaped string to be used as an env var lookup
+     * @return string The index name, either verbatim as passed in or looked up via env variable
+     */
+    protected function getEsIndexName($indexName)
+    {
+        return Injector::inst()->convertServiceProperty($indexName);
     }
 }

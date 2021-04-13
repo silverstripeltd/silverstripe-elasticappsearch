@@ -248,6 +248,17 @@ class SpellcheckServiceTest extends SapphireTest
         $this->assertSame(3, sizeof($selectedSuggestions));
     }
 
+    public function testGetEsIndexName()
+    {
+        $service = Injector::inst()->get(SpellcheckService::class);
+        $method = new ReflectionMethod(SpellcheckService::class, 'getEsIndexName');
+        $method->setAccessible(true);
+
+        Environment::setEnv('ELASTICSEARCH_INDEX_NAME', 'abc123');
+        $this->assertSame('unmodified-value', $method->invoke($service, 'unmodified-value'));
+        $this->assertSame('abc123', $method->invoke($service, '`ELASTICSEARCH_INDEX_NAME`'));
+    }
+
     private function getMockElasticsearchResponse()
     {
         return [
