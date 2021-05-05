@@ -64,6 +64,11 @@ class AppSearchService
     public $gateway;
 
     /**
+     * @var SpellcheckService The service class used to retrieve spelling suggestions (if enabled)
+     */
+    public $spellcheckService;
+
+    /**
      * @var LoggerInterface The monolog interface used to handle errors and warnings during searching
      */
     public $logger;
@@ -101,7 +106,10 @@ class AppSearchService
         // If we want to inject spelling suggestions, do so
         if ($result->getResults()->TotalItems() == 0 && $this->config()->enable_spellcheck_on_zero_results) {
             $suggestions = $this->spellcheckService->getSpellingSuggestions($query, $engineName, $request);
-            $result->setSpellingSuggestions($suggestions);
+
+            if ($suggestions) {
+                $result->setSpellingSuggestions($suggestions);
+            }
         }
 
         return $result;
