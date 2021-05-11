@@ -100,7 +100,7 @@ class SpellcheckService
                 'index' => $esIndexName,
                 'body' => [
                     'suggest' => [
-                        'text' => $query->getQuery(),
+                        'text' => mb_strtolower($query->getQuery()), // String is lowercased as suggestions are exact
                     ]
                 ]
             ];
