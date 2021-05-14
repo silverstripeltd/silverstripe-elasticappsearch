@@ -321,7 +321,7 @@ class SpellcheckService
     {
         $maxNumSuggestions = $this->config()->max_spellcheck_suggestions;
         $selectedSuggestions = [];
-        $originalQuery = $query->getQuery();
+        $originalQuery = mb_strtolower($query->getQuery());
 
         foreach ($extractedSuggestions as $originalWord => $replacementSuggestions) {
             foreach ($replacementSuggestions as $replacement) {
