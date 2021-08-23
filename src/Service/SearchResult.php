@@ -213,7 +213,7 @@ class SearchResult extends ViewableData
                 // Skip known fields that we don't care about checking for snippet data
                 if (in_array($resultField, ['_meta', 'id', 'record_base_class', 'record_id'])) continue;
 
-                if (is_array($fieldValues) && array_key_exists('snippet', $fieldValues)) {
+                if (is_array($fieldValues) && array_key_exists('snippet', $fieldValues) && $fieldValues['snippet'] !== null) {
                     $snippets[$resultField] = DBField::create_field('HTMLVarchar', $fieldValues['snippet']);
                 }
             }
