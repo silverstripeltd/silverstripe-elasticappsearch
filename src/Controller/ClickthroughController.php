@@ -2,6 +2,7 @@
 
 namespace SilverStripe\ElasticAppSearch\Controller;
 
+use Exception;
 use LogicException;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Control\Controller;
@@ -9,7 +10,6 @@ use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ElasticAppSearch\Gateway\AppSearchGateway;
 use SilverStripe\ElasticAppSearch\Service\AppSearchService;
-use SilverStripe\TextExtraction\Extractor\FileTextExtractor\Exception;
 use stdClass;
 
 class ClickthroughController extends Controller
