@@ -34,7 +34,7 @@ Then, you will need to use composer to install the `elastic/elasticsearch-php` l
 composer require "elasticsearch/elasticsearch:^7.11"
 ```
 
-Next, you can enable automatic spellcheck when zero results are returned. Alongside enabling it, you need to specify which fields you want to request suggestions from for each internal Elasticsearch index. Index and field names need to be in the internal Elasticsearch format (typically `.ent-search-engine-random-sha` for the index name and `field_name$string` for example for a `text` field in Elastic App Search):
+Next, you can enable automatic spellcheck when zero results are returned. Alongside enabling it, you need to specify which fields you want to request suggestions from for each internal Elasticsearch index. Index and field names need to be in the internal Elasticsearch format (typically `.ent-search-engine-documents-engine-name` for the index name and `field_name` for example for a `text` field in Elastic App Search):
 
 ```yml
 SilverStripe\ElasticAppSearch\Service\AppSearchService:
@@ -54,13 +54,13 @@ SilverStripe\ElasticAppSearch\Service\SpellcheckService:
     # The engine/index and field map for each Elastic App Search you want to provide spellchecking for, where:
     # - engine_name is the name of the engine (don't include the environment variable part - e.g. just use "content" if your engine name is actually "dev-content"
     # - internal_index_name is the internal name of the index within Elasticsearch. This typically starts with .ent-search-engine- and then a random SHA.
-    # - fields is an array of internal Elasticsearch fields that should be used to get spelling suggestions from. These can only be taken from text (aka string) fields, and follow the Elastic App Search naming format (e.g. a field in your IndexConfiguration called 'Title' will have a field called 'Title$string' internally within Elasticsearch).
+    # - fields is an array of internal Elasticsearch fields that should be used to get spelling suggestions from. These can only be taken from text (aka string) fields, and follow the Elastic App Search naming format (e.g. a field in your IndexConfiguration called 'title' will have a field called 'title' internally within Elasticsearch).
     spellcheck_suggestion_fields:
         engine_name:
-            internal_index_name: '.ent-search-engine-random-sha'
+            internal_index_name: '.ent-search-engine-documents-engine-name'
             fields:
-                - "title$string"
-                - "content$string"
+                - "title"
+                - "content"
 ```
 
 Finally, you just need to update your template to include the new spelling suggestions if there are zero results.
