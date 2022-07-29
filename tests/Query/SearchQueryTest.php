@@ -14,7 +14,7 @@ class SearchQueryTest extends SapphireTest
      */
     private static $serializer;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
         self::$serializer = new SmartSerializer();
