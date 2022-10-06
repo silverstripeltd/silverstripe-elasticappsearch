@@ -41,7 +41,7 @@ SilverStripe\ElasticAppSearch\Service\AppSearchService:
     # Enable spellchecking by default when zero results are returned by Elastic App Search.
     enable_spellcheck_on_zero_results: true
     
-    # Sets the index variant value. If using the silverstripe-search-service module, this must be the same as what you use for that (e.g. `APP_SEARCH_ENGINE_PREFIX`)
+    # Sets the index variant value. If using the silverstripe-search-service module, this must be the same as what you use for that (e.g. `ENTERPRISE_SEARCH_ENGINE_PREFIX`)
     index_variant: '`SS_ENVIRONMENT_TYPE`'
 
 SilverStripe\ElasticAppSearch\Service\SpellcheckService:
