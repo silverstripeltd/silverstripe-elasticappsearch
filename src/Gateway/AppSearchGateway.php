@@ -56,11 +56,11 @@ class AppSearchGateway
     {
         if (!isset($this->client) || !$this->client instanceof Client) {
             // Ensure the API key and endpoint exist
-            $apiKey = Environment::getEnv('APP_SEARCH_API_SEARCH_KEY');
-            $apiEndpoint = Environment::getEnv('APP_SEARCH_ENDPOINT');
+            $apiKey = Environment::getEnv('ENTERPRISE_SEARCH_API_SEARCH_KEY');
+            $apiEndpoint = Environment::getEnv('ENTERPRISE_SEARCH_ENDPOINT');
 
             if (!$apiKey || !$apiEndpoint) {
-                $msg = 'Missing environment configuration for either APP_SEARCH_API_SEARCH_KEY or APP_SEARCH_ENDPOINT,'
+                $msg = 'Missing environment configuration for either ENTERPRISE_SEARCH_API_SEARCH_KEY or ENTERPRISE_SEARCH_ENDPOINT,'
                     . ' please read the module documentation.';
 
                 throw new Exception($msg);
