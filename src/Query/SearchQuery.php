@@ -119,7 +119,7 @@ class SearchQuery
             "it", "no", "not", "of", "on", "or", "such", "that", "the", "their", "then", "there",
             "these", "they", "this", "to", "was", "will", "with"
         ];
-        
+
         foreach (explode(' ', $keywordString) as $keyword) {
             $prefix = '+';
 
@@ -348,7 +348,7 @@ class SearchQuery
         return $searchFields;
     }
 
-    private function getSortForArray(): ?array
+    public function getSortForArray(): ?array
     {
         $sort = null;
 
