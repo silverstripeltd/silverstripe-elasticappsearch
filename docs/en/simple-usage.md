@@ -9,7 +9,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-**Note:** This is not meant to be a feature-packed demo - just provide you the basics to get started. Once you've implemented this, check out [configuration.md](configuration.md) to see other features that can be enabled.
+**Note:** This is not meant to be a feature-packed demo - just provide you the basics to get started. Once you've implemented this, check out [usage.md](usage.md) to see other features that can be enabled.
 
 This module does not provide a search results page out of the box. You an hook it up to your existing results page, or create a new one. A minimal example of a `SearchResultsController` is below, along with the Silverstripe template that might go alongside it.
 
@@ -145,4 +145,3 @@ The corresponding SearchResultsController template might look like this:
 
 # Next steps
 * [View usage.md for how to use other features](usage.md)
-* [View configuration.md for additional configuration options](configuration.md)
