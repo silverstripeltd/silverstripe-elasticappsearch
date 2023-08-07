@@ -1,5 +1,7 @@
 # silverstripeltd/silverstripe-elasticappsearch
 
+![github actions](https://github.com/silverstripeltd/silverstripe-elasticappsearch/actions/workflows/main.yml/badge.svg)
+
 This is a module that provides services to connect a [SilverStripe CMS](https://www.silverstripe.org/) powered website to [Elastic App Search](https://www.elastic.co/enterprise-search).
 
 **Note:** This module only provides the query service that allows you to query Elastic App Search and build search result pages. To index content from a SilverStripe CMS powered website, you should include and configure the [silverstripe/silverstripe-search-service](https://github.com/silverstripe/silverstripe-search-service/) module as well.
