@@ -16,6 +16,7 @@
     "keywords": ["SilverStripe", "SilverStripe CMS", "Elastic", "Elastic App Search"],
 
     "require": {
+		"php": "^7.4 || ^8.0",
         "silverstripe-terraformers/app-search-php-8": "^7.14",
         "silverstripe/framework": "^4",
         "mockery/mockery": "^1.2"
