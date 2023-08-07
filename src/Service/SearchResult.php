@@ -211,7 +211,9 @@ class SearchResult extends ViewableData
             $snippets = [];
             foreach ($result as $resultField => $fieldValues) {
                 // Skip known fields that we don't care about checking for snippet data
-                if (in_array($resultField, ['_meta', 'id', 'record_base_class', 'record_id'])) continue;
+                if (in_array($resultField, ['_meta', 'id', 'record_base_class', 'record_id'])) {
+                    continue;
+                }
 
                 if (is_array($fieldValues) && array_key_exists('snippet', $fieldValues) && $fieldValues['snippet'] !== null) {
                     $snippets[$resultField] = DBField::create_field('HTMLVarchar', $fieldValues['snippet']);
@@ -260,7 +262,7 @@ class SearchResult extends ViewableData
     {
         $list = ArrayList::create();
         foreach ($response['facets'] as $property => $results) {
-            foreach ($results as $index => $result){
+            foreach ($results as $index => $result) {
                 $data = ArrayList::create();
                 foreach ($result['data'] as $resultData) {
                     $data->push(ArrayData::create([

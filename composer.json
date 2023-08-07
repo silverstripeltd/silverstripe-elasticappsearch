@@ -35,5 +35,11 @@
 
     "suggest": {
         "elasticsearch/elasticsearch": "Allows the use of spellcheck (see silverstripe-elasticappsearch README for details)"
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true,
+            "silverstripe/vendor-plugin": true
+        }
     }
 }

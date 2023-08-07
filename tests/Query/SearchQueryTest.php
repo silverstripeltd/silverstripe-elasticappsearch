@@ -171,8 +171,6 @@ JSON;
 JSON;
 
         $this->assertJsonStringEqualsJsonString($expectedJson, self::serializeBody($searchQuery));
-
-
     }
 
     /*

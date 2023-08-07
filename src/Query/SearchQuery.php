@@ -269,7 +269,7 @@ class SearchQuery
             $query['search_fields'] = $this->getSearchFieldsForArray();
         }
 
-        if (isset($this->pageNum) && isset ($this->pageSize)) {
+        if (isset($this->pageNum) && isset($this->pageSize)) {
             $query['page'] = $this->getPaginationForArray();
         }
 
@@ -291,7 +291,7 @@ class SearchQuery
     {
         $page = null;
 
-        if (isset($this->pageNum) && isset ($this->pageSize)) {
+        if (isset($this->pageNum) && isset($this->pageSize)) {
             $page = new stdClass;
             $page->size = $this->pageSize;
             $page->current = $this->pageNum;

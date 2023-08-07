@@ -292,7 +292,7 @@ class SpellcheckService
      */
     protected function sortSuggestions(array $suggestions): array
     {
-        $sortFunc = function(array $a, array $b) {
+        $sortFunc = function (array $a, array $b) {
             if ($a['score'] === $b['score']) {
                 return 0;
             } elseif ($a['score'] < $b['score']) {
