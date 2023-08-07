@@ -318,7 +318,7 @@ class SpellcheckServiceTest extends SapphireTest
                     'index' => '.ent-search-engine-abc123thisisahash',
                     'body' => [
                         'suggest' => [
-                            'text' => 'originalWord1 originalWord2',
+                            'text' => 'originalword1 originalword2',
                             'field1' => [
                                 'term' => [
                                     'field' => 'field1'
