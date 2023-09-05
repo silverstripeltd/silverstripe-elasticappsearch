@@ -21,9 +21,12 @@ Add the following to your composer.json:
 }
 ```
 
-You will need to add the following environment variables at a minimium:
-* `ENTERPRISE_SEARCH_ENDPOINT`: This should already be defined if you are using the [silverstripe/silverstripe-search-service](https://github.com/silverstripe/silverstripe-search-service/) module. This is the API endpoint for your Elastic App Search interface.
+You will need to add the following environment variables at a minimum:
+
+* `ENTERPRISE_SEARCH_ENDPOINT`: This should already be defined if you are using the [silverstripe/silverstripe-search-service v2](https://github.com/silverstripe/silverstripe-search-service/) module. This is the API endpoint for your Elastic App Search interface.
+if you are using an older version of `silverstripe/silverstripe-search-service` then the environment variable is `APP_SEARCH_ENDPOINT`
 * `ENTERPRISE_SEARCH_API_SEARCH_KEY`: This is the public search API key that you've configured in the Credentials section of Elastic App Search. It should begin with `search-`.
+ if you are using an older version of `silverstripe/silverstripe-search-service` then the environment variable is `APP_SEARCH_API_SEARCH_KEY`
 
 Then run the following:
 ```shell script
