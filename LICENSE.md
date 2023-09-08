@@ -7,9 +7,9 @@ All rights reserved
 
 ## 1. DEFINITIONS
 
-### 1.1 "Software" refers to the contents of this repository.
+1.1 "Software" refers to the contents of this repository.
 
-### 1.2 "You" means the person or entity intending to use the Software.
+1.2 "You" means the person or entity intending to use the Software.
 
 ## 2. GRANT OF LICENSE
 
@@ -17,11 +17,12 @@ Subject to the terms of this Licence, the Licensor hereby grants You a limited, 
 
 ## 3. RESTRICTIONS
 
-### 3.1 You may not distribute, sublicense, or sell copies of the Software.
+3.1 You may not distribute, sublicense, or sell copies of the Software.
 
-### 3.2 You may not reverse engineer, decompile, or disassemble the Software.
+3.2 You may not reverse engineer, decompile, or disassemble the Software.
 
-### 3.3 You may not modify, adapt, or create derivative works from the Software.
+3.3 You may not modify, adapt, or create derivative works from the Software.
+
 ## 4. INTELLECTUAL PROPERTY
 
 You acknowledge that Licensor retains all intellectual property rights in the Software repository, including but not limited to copyright, patents, trademarks, trade secrets, and any other rights not expressly granted under this Licence.
