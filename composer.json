@@ -3,7 +3,7 @@
     "description": "Connector module for querying Elastic App Search from SilverStripe CMS",
 
     "type": "silverstripe-vendormodule",
-    "license": "BSD-3-Clause",
+    "license": "proprietary",
     "homepage": "https://github.com/silverstripeltd/silverstripe-elasticappsearch",
 
     "authors": [
