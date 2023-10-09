@@ -135,8 +135,6 @@ class SpellcheckService
 
             return $list;
         } catch (Exception $e) {
-
-            var_dump($e);
             // Soft-fail - log the error but do not fail the entire request
             $this->logger->error(
                 sprintf("Couldn't find spelling suggestions for %s: %s", $query->getQuery(), $e->getMessage())
