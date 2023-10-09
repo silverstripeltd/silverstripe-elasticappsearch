@@ -2,7 +2,8 @@
 
 namespace SilverStripe\ElasticAppSearch\Service;
 
-use Elasticsearch\ClientBuilder;
+use Elastic\Elasticsearch\ClientBuilder;
+use Elastic\Elasticsearch\Response\Elasticsearch;
 use Exception;
 use LogicException;
 use Psr\Log\LoggerInterface;
@@ -116,8 +117,7 @@ class SpellcheckService
 
             // Attempt to make a connection to Elasticsearch
             $suggestions = $this->elasticsearchGateway->search($searchParams);
-            $extractedSuggestions = $this->extractPotentialSuggestions($suggestions);
-
+            $extractedSuggestions = $this->extractPotentialSuggestions($suggestions->asArray());
             // Now we have a sorted, flattened list of potential suggestions, and we just need to pick some
             $selectedSuggestions = $this->selectSuggestions($extractedSuggestions, $query);
 
@@ -135,6 +135,8 @@ class SpellcheckService
 
             return $list;
         } catch (Exception $e) {
+
+            var_dump($e);
             // Soft-fail - log the error but do not fail the entire request
             $this->logger->error(
                 sprintf("Couldn't find spelling suggestions for %s: %s", $query->getQuery(), $e->getMessage())

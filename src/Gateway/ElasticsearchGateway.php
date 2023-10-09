@@ -2,8 +2,8 @@
 
 namespace SilverStripe\ElasticAppSearch\Gateway;
 
+use Elastic\Elasticsearch\ClientBuilder;
 use Elasticsearch\Client;
-use Elasticsearch\ClientBuilder;
 use SilverStripe\Core\Environment;
 
 class ElasticsearchGateway
@@ -28,7 +28,7 @@ class ElasticsearchGateway
 
             $this->client = ClientBuilder::create()
                 ->setElasticCloudId($elasticCloudId)
-                ->setApiKey($apiKeyId, $apiKey)
+                ->setApiKey($apiKey, $apiKeyId)
                 ->build();
         }
 
