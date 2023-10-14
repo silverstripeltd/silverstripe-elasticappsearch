@@ -14,15 +14,15 @@ use stdClass;
 
 class ClickthroughController extends Controller
 {
-    private static $url_handlers = [
-        '_click' => 'index'
+    private static array $url_handlers = [
+        '_click' => 'index',
     ];
 
-    private static $allowed_actions = [
-        'index'
+    private static array $allowed_actions = [
+        'index',
     ];
 
-    private static $base_url = '_click';
+    private static string $base_url = '_click';
 
     public function index(HTTPRequest $request)
     {
@@ -32,7 +32,7 @@ class ClickthroughController extends Controller
         // Get the base64 encoded string that we want to look at
         $data = base64_decode($request->getVar('d'));
 
-        if ($data === false || strlen($data) <= 0) {
+        if ($data === false || mb_strlen($data) <= 0) {
             $this->httpError(404);
         }
 
@@ -60,6 +60,7 @@ class ClickthroughController extends Controller
             if ($obj && $obj->exists()) {
                 $this->registerClickthrough($data); // Attempt to register a clickthrough, swallow any errors
                 $link = $obj->Link();
+
                 return $this->redirect($obj->Link(), 302); // Force temporary redirect
             }
         } catch (Exception $e) {
@@ -79,6 +80,11 @@ class ClickthroughController extends Controller
         $this->httpError(404);
     }
 
+    public static function get_base_url()
+    {
+        return self::config()->base_url;
+    }
+
     /**
      * Register a clickthrough with Elastic, provided enough information is passed in order to do so.
      *
@@ -95,6 +101,7 @@ class ClickthroughController extends Controller
             );
 
             Injector::inst()->get(LoggerInterface::class)->warning($err);
+
             return;
         }
 
@@ -109,17 +116,12 @@ class ClickthroughController extends Controller
             // If we get an error, log it but swallow the error, logging a clickthrough isn't important
             // enough to interrupt the user
             $err = sprintf(
-                'Error while logging clickthrough in Elastic App Search: %s. Traceback:',
+                'Error while logging clickthrough in Elastic App Search: %s. Traceback:%s',
                 $e->getMessage(),
                 $e->getTraceAsString()
             );
 
             Injector::inst()->get(LoggerInterface::class)->warning($err);
         }
-    }
-
-    public static function get_base_url()
-    {
-        return self::config()->base_url;
     }
 }

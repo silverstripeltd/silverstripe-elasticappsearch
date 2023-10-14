@@ -24,8 +24,7 @@ use SilverStripe\ElasticAppSearch\Query\SearchQuery,
     SilverStripe\Forms\Form,
     SilverStripe\Forms\FieldList,
     SilverStripe\Forms\TextField,
-    SilverStripe\Forms\FormAction,
-    SilverStripe\SearchService\Services\AppSearch\AppSearchService as SilverStripeAppSearchService;
+    SilverStripe\Forms\FormAction;
 
 class SearchResultsController extends PageController
 {
@@ -62,7 +61,7 @@ class SearchResultsController extends PageController
         // This is the Elastic App Search engine name, this could just be a simple string - but here we use the
         // silverstripe-search-service code to ensure our engine name always matches the YML configuration used in that
         // module.
-        $engineName = SilverStripeAppSearchService::environmentizeIndex('content');
+        $engineName = $service->environmentizeIndex('content');
         
         try {
             return $service->search($query, $engineName, $this->getRequest());        

@@ -2,19 +2,17 @@
 
 namespace SilverStripe\ElasticAppSearch\Service;
 
-use Elasticsearch\ClientBuilder;
+use Elastic\EnterpriseSearch\AppSearch\Schema\MultiSearchData;
 use Exception;
-use LogicException;
 use Psr\Log\LoggerInterface;
-use SilverStripe\Core\Environment;
-use SilverStripe\ElasticAppSearch\Gateway\AppSearchGateway;
-use SilverStripe\ElasticAppSearch\Gateway\ElasticsearchGateway;
-use SilverStripe\ElasticAppSearch\Query\MultiSearchQuery;
-use SilverStripe\ElasticAppSearch\Query\SearchQuery;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Environment;
 use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\ElasticAppSearch\Gateway\AppSearchGateway;
+use SilverStripe\ElasticAppSearch\Query\MultiSearchQuery;
+use SilverStripe\ElasticAppSearch\Query\SearchQuery;
 use SilverStripe\ORM\ArrayList;
 
 class AppSearchService
@@ -24,61 +22,60 @@ class AppSearchService
     use Configurable;
 
     /**
+     * The gateway to be used when querying Elastic App Search.
+     */
+    public ?AppSearchGateway $gateway = null;
+
+    /**
+     * The service class used to retrieve spelling suggestions (if enabled).
+     */
+    public ?SpellcheckService $spellcheckService = null;
+
+    /**
+     * The monolog interface used to handle errors and warnings during searching.
+     */
+    public ?LoggerInterface $logger = null;
+
+    /**
      * @var string The _GET var to use for the PaginatedList when paging through search results. Defaults to 'start',
-     * same as PaginatedList itself.
+     *             same as PaginatedList itself.
+     *
      * @config
      */
-    private static $pagination_getvar = 'start';
+    private static string $pagination_getvar = 'start';
 
     /**
      * @var int The number of search results to return per page. Can be overridden by calling setPagination() on the
-     * SearchQuery object passed in to the search method.
+     *          SearchQuery object passed in to the search method.
+     *
      * @config
      */
-    private static $pagination_size = 10;
+    private static int $pagination_size = 10;
 
     /**
      * @var bool Enable spellchecking of keywords when zero results are returned. Used in conjunction with YML config
-     * flag "SearchQuery.enable_typo_tolerance = false". See the 'Spelling suggestions' section of the README for more
-     * details.
+     *           flag "SearchQuery.enable_typo_tolerance = false". See the 'Spelling suggestions' section of the README for more
+     *           details.
      */
-    private static $enable_spellcheck_on_zero_results = false;
+    private static bool $enable_spellcheck_on_zero_results = false;
 
     /**
      * These values are used for analytics clickthrough tracking, where we have to pass some data through the user's browser, so we want to disambiguate the classname from the 'type'.
      *
      * @var array Map between FQCN and a human-readable 'type' (e.g. SilverStripe\CMS\Model\SiteTree -> page).
+     *
      * @see _config/analytics.yml
      */
-    private static $classname_to_type_mapping = [];
+    private static array $classname_to_type_mapping = [];
 
-    private static $dependencies = [
+    private static array $dependencies = [
         'gateway' => '%$' . AppSearchGateway::class,
         'spellcheckService' => '%$' . SpellcheckService::class,
         'logger' => '%$' . LoggerInterface::class . '.errorhandler',
     ];
 
     /**
-     * @var AppSearchGateway The gateway to be used when querying Elastic App Search
-     */
-    public $gateway;
-
-    /**
-     * @var SpellcheckService The service class used to retrieve spelling suggestions (if enabled)
-     */
-    public $spellcheckService;
-
-    /**
-     * @var LoggerInterface The monolog interface used to handle errors and warnings during searching
-     */
-    public $logger;
-
-    /**
-     * @param SearchQuery $query
-     * @param string $engineName
-     * @param HTTPRequest $request
      * @throws Exception If the connection to Elastic is not available, index not configured or any other error
-     * @return SearchResult|null
      */
     public function search(SearchQuery $query, string $engineName, HTTPRequest $request): ?SearchResult
     {
@@ -87,12 +84,12 @@ class AppSearchService
         // Ensure we take pagination into account within the query. Allows overriding of pagination directly if required
         // by simply calling setPagination on the SearchQuery object prior to calling this method.
         if (!$query->hasPagination()) {
-            $pageNum = $request->getVar($cfg->pagination_getvar) / $cfg->pagination_size ?? 0;
-            $pageNum++; // We do this because PaginatedList uses a zero-based index and App Search is one-based
-            $query->setPagination($cfg->pagination_size, $pageNum);
+            $pageNum = (int)$request->getVar($cfg->pagination_getvar) / (int)$cfg->pagination_size ?? 0;
+            ++$pageNum; // We do this because PaginatedList uses a zero-based index and App Search is one-based
+            $query->setPagination((int)$cfg->pagination_size, $pageNum);
         }
 
-        $response = $this->gateway->search($engineName, $query->getQueryForElastic(), $query->getSearchParamsAsArray());
+        $response = $this->gateway->search($engineName, $query->getSearchParams())->asArray();
 
         // Allow extensions to manipulate the results array before any validation or processing occurs
         // WARNING: This extension hook is fired before the response is checked for validity, it may not be a valid
@@ -107,7 +104,7 @@ class AppSearchService
         if ($result->getResults()->TotalItems() == 0 && $this->config()->enable_spellcheck_on_zero_results) {
             $suggestions = $this->spellcheckService->getSpellingSuggestions($query, $engineName, $request);
 
-            if ($suggestions) {
+            if ($suggestions instanceof ArrayList) {
                 $result->setSpellingSuggestions($suggestions);
             }
         }
@@ -116,11 +113,7 @@ class AppSearchService
     }
 
     /**
-     * @param MultiSearchQuery $query
-     * @param string $engineName
-     * @param HTTPRequest $request
      * @throws Exception If the connection to Elastic is not available, index not configured or any other error
-     * @return MultiSearchResult|null
      */
     public function multisearch(MultiSearchQuery $query, string $engineName, HTTPRequest $request): ?MultiSearchResult
     {
@@ -130,12 +123,12 @@ class AppSearchService
         foreach ($queries as $singleQuery) {
             if (!$singleQuery->hasPagination()) {
                 $pageNum = $request->getVar($cfg->pagination_getvar) / $cfg->pagination_size ?? 0;
-                $pageNum++; // We do this because PaginatedList uses a zero-based index and App Search is one-based
+                ++$pageNum; // We do this because PaginatedList uses a zero-based index and App Search is one-based
                 $singleQuery->setPagination($cfg->pagination_size, $pageNum);
             }
         }
 
-        $response = $this->gateway->multisearch($engineName, $query->renderQueries());
+        $response = $this->gateway->multisearch($engineName, new MultiSearchData($query->getSearchParams()))->asArray();
 
         // Allow extensions to manipulate the results array before any validation or processing occurs
         // WARNING: This extension hook is fired before the response is checked for validity, it may not be a valid
@@ -145,11 +138,13 @@ class AppSearchService
         // Create the new MultiSearchResult object in which to store results, including validating the response
         $result = MultiSearchResult::create($query, $response);
         $result->setEngineName($engineName);
+
         return $result;
     }
 
     /**
      * @param string $className The FQCN to attempt to map to a human-readable name (e.g. SilverStripe\Security\Member)
+     *
      * @return string The human-readable name, or the original class name if a suitable map can't be found
      */
     public function classToType(string $className): string
@@ -164,11 +159,10 @@ class AppSearchService
     }
 
     /**
-     * Opposite of @link classToType() above. Takes a type (e.g. page), and returns the associated DataObject
-     * (e.g. SiteTree). If we can't find a match, return null to indicate that we don't know
+     * Opposite of @param string $typeOrClass The short human-readable.
      *
-     * @param string $typeOrClass The short human-readable
-     * @return string
+     * @see classToType() above. Takes a type (e.g. page), and returns the associated DataObject
+     * (e.g. SiteTree). If we can't find a match, return null to indicate that we don't know.
      */
     public function typeToClass(string $typeOrClass): ?string
     {
@@ -195,7 +189,6 @@ class AppSearchService
      * coupling the two modules together.
      *
      * @param string $indexName The untouched index name. If a variant exists, it will be added to this.
-     * @return string
      */
     public function environmentizeIndex(string $indexName): string
     {
@@ -215,7 +208,7 @@ class AppSearchService
         }
 
         if ($variant) {
-            return sprintf("%s-%s", $variant, $indexName);
+            return sprintf('%s-%s', $variant, $indexName);
         }
 
         return $indexName;

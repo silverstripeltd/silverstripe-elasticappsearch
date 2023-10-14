@@ -2,6 +2,10 @@
 
 namespace SilverStripe\ElasticAppSearch\Query;
 
+use Elastic\EnterpriseSearch\AppSearch\Schema\PaginationResponseObject;
+use Elastic\EnterpriseSearch\AppSearch\Schema\SearchFields;
+use Elastic\EnterpriseSearch\AppSearch\Schema\SearchRequestParams;
+use Elastic\EnterpriseSearch\AppSearch\Schema\SimpleObject;
 use SilverStripe\Core\Config\Configurable;
 use stdClass;
 
@@ -11,66 +15,41 @@ class SearchQuery
 
     /**
      * @var bool Set to false to disable typo tolerance (which will force exact matches for every individual keyword)
+     *
      * @config
      */
-    private static $enable_typo_tolerance = true;
+    private static bool $enable_typo_tolerance = true;
 
-    /**
-     * @var string
-     */
-    private $query;
+    private string $query = '';
 
-    /**
-     * @var stdClass
-     */
-    private $rawFilters;
+    private ?SimpleObject $rawFilters = null;
 
-    /**
-     * @var stdClass
-     */
-    private $rawFacets;
+    private ?SimpleObject $rawFacets = null;
 
-    /**
-     * @var array
-     */
-    private $resultFields;
+    private ?array $resultFields = null;
 
-    /**
-     * @var array
-     */
-    private $sort;
+    private ?array $sort = null;
 
-    /**
-     * @var array
-     */
-    private $searchFields;
+    private ?array $searchFields = null;
 
-    /**
-     * @var int
-     */
-    private $pageSize;
+    private ?int $pageSize = null;
 
-    /**
-     * @var int
-     */
-    private $pageNum;
+    private ?int $pageNum = null;
 
     /**
      * Set the query string that all documents must match in order to be returned. This can be set to an empty string to
      * return all documents. This can be useful for example when you want to return all documents that match a
      * particular filter.
-     *
-     * @param string $query
-     * @return $this
      */
     public function setQuery(string $query): self
     {
         $this->query = $query;
+
         return $this;
     }
 
     /**
-     * @return string The query string set on this query
+     * The query string set on this query.
      */
     public function getQuery(): string
     {
@@ -85,7 +64,7 @@ class SearchQuery
      *
      * @see https://swiftype.com/documentation/app-search/api/search#search-queries
      *
-     * @return string The query string that Elastic should be sent.
+     * @return string the query string that Elastic should be sent
      */
     public function getQueryForElastic(): string
     {
@@ -107,7 +86,7 @@ class SearchQuery
         // Don't hack it together if they are doing advanced manoeuvres already
         $luceneOperators = ['AND', 'OR', 'NOT', '"'];
         foreach ($luceneOperators as $luceneOperator) {
-            if (strpos($keywordString, $luceneOperator) !== false) {
+            if (mb_strpos($keywordString, $luceneOperator) !== false) {
                 return $keywordString;
             }
         }
@@ -115,9 +94,9 @@ class SearchQuery
         // Source: https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-stop-tokenfilter.html#analysis-stop-tokenfilter-stop-words-by-lang
         // @todo: Assumption here that stopwords are all in English
         $englishStopWords = [
-            "a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "if", "in", "into", "is",
-            "it", "no", "not", "of", "on", "or", "such", "that", "the", "their", "then", "there",
-            "these", "they", "this", "to", "was", "will", "with"
+            'a', 'an', 'and', 'are', 'as', 'at', 'be', 'but', 'by', 'for', 'if', 'in', 'into', 'is',
+            'it', 'no', 'not', 'of', 'on', 'or', 'such', 'that', 'the', 'their', 'then', 'there',
+            'these', 'they', 'this', 'to', 'was', 'will', 'with',
         ];
 
         foreach (explode(' ', $keywordString) as $keyword) {
@@ -130,7 +109,7 @@ class SearchQuery
 
             // Requiring a stopword to be present _always_ returns zero results
             // Remove punctuation so that we catch 'No.' being used for number, for example
-            if (in_array(preg_replace("/[^a-z0-9]/", '', strtolower($keyword)), $englishStopWords)) {
+            if (in_array(preg_replace('/[^a-z0-9]/', '', mb_strtolower($keyword)), $englishStopWords)) {
                 $prefix = '';
             }
 
@@ -147,59 +126,50 @@ class SearchQuery
 
     /**
      * Sets the raw 'filters' attribute for filtering results. For more information on how to create filters, consult
-     * the Elastic App Search documentation: https://www.elastic.co/guide/en/app-search/current/filters.html
+     * the Elastic App Search documentation: https://www.elastic.co/guide/en/app-search/current/filters.html.
      *
      * @todo It would be nice to allow for PHP-built filters (e.g. built from objects rather than needing the developer
      * to figure out how Elastic's 'filters' key works) but that's a feature for a later date.
-     *
-     * @param stdClass $filters
-     * @return $this
      */
-    public function addRawFilters(stdClass $filters): self
+    public function addRawFilters(SimpleObject $filters): self
     {
         $this->rawFilters = $filters;
+
         return $this;
     }
 
     /**
      * Sets the raw 'facets' attribute for returning metadata related to the search query. See the docs for help:
-     * https://swiftype.com/documentation/app-search/api/search/facets
-     *
-     *
-     * @param stdClass $facets
-     * @return $this
+     * https://swiftype.com/documentation/app-search/api/search/facets.
      */
-
-    public function addRawFacets(stdClass $facets): self
+    public function addRawFacets(SimpleObject $facets): self
     {
         $this->rawFacets = $facets;
+
         return $this;
     }
 
     /**
      * Add a sort method to the list, see:
-     * https://www.elastic.co/guide/en/app-search/current/sort.html
+     * https://www.elastic.co/guide/en/app-search/current/sort.html.
      *
-     * @param string $fieldName
      * @param string $direction valid values are asc/desc
-     * @return $this
      */
-    public function addSort(string $fieldName, string $direction = 'asc') : self
+    public function addSort(string $fieldName, string $direction = 'asc'): self
     {
         if (!isset($this->sort)) {
             $this->sort = [];
         }
 
-        $this->sort[] = [$fieldName => strtolower($direction)];
+        $this->sort[] = [$fieldName => mb_strtolower($direction)];
 
         return $this;
     }
 
     /**
-     * Adds multiple sort methods at once
+     * Adds multiple sort methods at once.
      *
      * @param array $sortMethods [$fieldname => $direction]
-     * @return $this
      */
     public function addSorts(array $sortMethods): self
     {
@@ -210,12 +180,6 @@ class SearchQuery
         return $this;
     }
 
-    /**
-     * @param string $field
-     * @param string $type
-     * @param int $size
-     * @return $this
-     */
     public function addResultField(string $field, string $type = 'raw', int $size = 0)
     {
         if (!isset($this->resultFields)) {
@@ -224,7 +188,7 @@ class SearchQuery
 
         $this->resultFields[$field] = [
             'type' => $type,
-            'size' => $size
+            'size' => $size,
         ];
 
         return $this;
@@ -237,40 +201,39 @@ class SearchQuery
         }
 
         $this->searchFields[$field] = $weight;
+
         return $this;
     }
 
     /**
      * Returns the string representation of the search params of this query, ready for sending to Elastic.
-     *
-     * @return array
      */
-    public function getSearchParamsAsArray(): array
+    public function getSearchParams(): SearchRequestParams
     {
-        $query = [];
+        $query = new SearchRequestParams($this->getQuery());
 
         if (isset($this->rawFilters)) {
-            $query['filters'] = $this->rawFilters;
+            $query->filters = $this->rawFilters;
         }
 
         if (isset($this->rawFacets)) {
-            $query['facets'] = $this->rawFacets;
+            $query->facets = $this->rawFacets;
         }
 
         if (isset($this->sort)) {
-            $query['sort'] = $this->getSortForArray();
+            $query->sort = $this->getSortForRequest();
         }
 
         if (isset($this->resultFields)) {
-            $query['result_fields'] = $this->getResultFieldsForArray();
+            $query->result_fields = $this->getResultFieldsForRequest();
         }
 
         if (isset($this->searchFields)) {
-            $query['search_fields'] = $this->getSearchFieldsForArray();
+            $query->search_fields = $this->getSearchFieldsForRequest();
         }
 
-        if (isset($this->pageNum) && isset($this->pageSize)) {
-            $query['page'] = $this->getPaginationForArray();
+        if (isset($this->pageNum, $this->pageSize)) {
+            $query->page = $this->getPaginationForRequest();
         }
 
         return $query;
@@ -287,68 +250,7 @@ class SearchQuery
         $this->pageNum = $pageNum;
     }
 
-    private function getPaginationForArray(): ?stdClass
-    {
-        $page = null;
-
-        if (isset($this->pageNum) && isset($this->pageSize)) {
-            $page = new stdClass;
-            $page->size = $this->pageSize;
-            $page->current = $this->pageNum;
-        }
-
-        return $page;
-    }
-
-    private function getResultFieldsForArray(): ?stdClass
-    {
-        $resultFields = null;
-
-        if (isset($this->resultFields)) {
-            $resultFields = new stdClass;
-
-            // Ensure we include the default fields so we can map these documents back to Silverstripe DataObjects
-            $resultFields->record_base_class = new stdClass;
-            $resultFields->record_base_class->raw = new stdClass;
-            $resultFields->record_id = $resultFields->record_base_class;
-
-            foreach ($this->resultFields as $field => $options) {
-                $type = $options['type'];
-                $size = $options['size'];
-
-                $resultFields->$field = new stdClass;
-                $resultFields->$field->$type = new stdClass;
-
-                if ($size) {
-                    $resultFields->$field->$type->size = $size;
-                }
-            }
-        }
-
-        return $resultFields;
-    }
-
-    private function getSearchFieldsForArray(): ?stdClass
-    {
-        $searchFields = null;
-
-        if (isset($this->searchFields)) {
-            $searchFields = new stdClass;
-
-            foreach ($this->searchFields as $field => $weight) {
-                $searchFields->$field = new stdClass;
-
-                // Add optional weight but only if it's specified and valid
-                if (is_numeric($weight) && $weight > 0) {
-                    $searchFields->$field->weight = $weight;
-                }
-            }
-        }
-
-        return $searchFields;
-    }
-
-    public function getSortForArray(): ?array
+    public function getSortForRequest(): ?array
     {
         $sort = null;
 
@@ -362,5 +264,66 @@ class SearchQuery
         }
 
         return $this->sort;
+    }
+
+    private function getPaginationForRequest(): ?PaginationResponseObject
+    {
+        $page = null;
+
+        if (isset($this->pageNum, $this->pageSize)) {
+            $page = new PaginationResponseObject();
+            $page->size = $this->pageSize;
+            $page->current = $this->pageNum;
+        }
+
+        return $page;
+    }
+
+    private function getResultFieldsForRequest(): ?SimpleObject
+    {
+        $resultFields = null;
+
+        if (isset($this->resultFields)) {
+            $resultFields = new SimpleObject();
+
+            // Ensure we include the default fields so we can map these documents back to Silverstripe DataObjects
+            $resultFields->record_base_class = new stdClass();
+            $resultFields->record_base_class->raw = new stdClass();
+            $resultFields->record_id = $resultFields->record_base_class;
+
+            foreach ($this->resultFields as $field => $options) {
+                $type = $options['type'];
+                $size = $options['size'];
+
+                $resultFields->{$field} = new stdClass();
+                $resultFields->{$field}->{$type} = new stdClass();
+
+                if ($size) {
+                    $resultFields->{$field}->{$type}->size = $size;
+                }
+            }
+        }
+
+        return $resultFields;
+    }
+
+    private function getSearchFieldsForRequest(): ?SearchFields
+    {
+        $searchFields = null;
+
+        if (isset($this->searchFields)) {
+            $searchFields = new SearchFields();
+
+            foreach ($this->searchFields as $field => $weight) {
+                $searchFields->{$field} = new stdClass();
+
+                // Add optional weight but only if it's specified and valid
+                if (is_numeric($weight) && $weight > 0) {
+                    $searchFields->{$field}->weight = $weight;
+                }
+            }
+        }
+
+        return $searchFields;
     }
 }
