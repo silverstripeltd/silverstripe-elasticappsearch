@@ -9,35 +9,35 @@ use SilverStripe\Dev\SapphireTest;
 
 class SearchResultTest extends SapphireTest
 {
-    public function testValidateResponseHasErrors()
+    public function testValidateResponseHasErrors(): void
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('Response appears to be from Elastic but is an error, not a valid search result');
         new SearchResult('query', ['errors' => []]);
     }
 
-    public function testValidateResponseNoMetaOrResults()
+    public function testValidateResponseNoMetaOrResults(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Response decoded as JSON but is not an Elastic search response');
         new SearchResult('query', []);
     }
 
-    public function testValidateResponseNoMeta()
+    public function testValidateResponseNoMeta(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Response decoded as JSON but is not an Elastic search response');
         new SearchResult('query', ['results' => []]);
     }
 
-    public function testValidateResponseNoResults()
+    public function testValidateResponseNoResults(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Response decoded as JSON but is not an Elastic search response');
         new SearchResult('query', ['meta' => []]);
     }
 
-    public function testFacets()
+    public function testFacets(): void
     {
         $result = new SearchResult('query', $this->getValidResponseFromBase([
             'facets' => [

@@ -2,58 +2,62 @@
 
 namespace SilverStripe\ElasticAppSearch\Service;
 
-use SilverStripe\ElasticAppSearch\Query\MultiSearchQuery;
+use Elastic\EnterpriseSearch\Response\Response;
+use InvalidArgumentException;
+use LogicException;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\ElasticAppSearch\Query\MultiSearchQuery;
 use SilverStripe\View\ViewableData;
 
 class MultiSearchResult extends ViewableData
 {
     use Injectable;
 
-    /**
-     * @var MultiSearchQuery
-     */
-    private $query;
+    private ?MultiSearchQuery $query = null;
 
-    /**
-     * @var array
-     */
-    private $response;
+    private ?array $response = null;
 
-    /**
-     * @var SearchResult[]
-     */
-    private $results;
-
-    /**
-     * @return SearchResult[]
-     */
-    public function getResults(): ?array
-    {
-        return $this->results;
-    }
-
-    /**
-     * @param SearchResult[] $results
-     */
-    public function setResults(array $results): void
-    {
-        $this->results = $results;
-    }
-
-    public function addResult(SearchResult $result): MultiSearchResult
-    {
-        $this->results[] = $result;
-        return $this;
-    }
+    private array $results = [];
 
     public function __construct(MultiSearchQuery $query, array $response)
     {
         parent::__construct();
 
         $this->query = $query;
-        $this->response = $response;
+        $this->setResponse($response);
+    }
+
+    public function getResults(): array
+    {
+        return $this->results;
+    }
+
+    public function setResults(array $results): self
+    {
+        $this->results = $results;
+
+        return $this;
+    }
+
+    public function addResult(SearchResult $result): self
+    {
+        $this->results[] = $result;
+
+        return $this;
+    }
+
+    public function setResponse(array $response): self
+    {
         $this->validateResponse($response);
+
+        $this->response = $response;
+
+        return $this;
+    }
+
+    public function getResponse(): array
+    {
+        return $this->response;
     }
 
     public function setEngineName(string $name): self
@@ -66,16 +70,17 @@ class MultiSearchResult extends ViewableData
     }
 
     /**
-     * @param array $response
-     * @throws \InvalidArgumentException Thrown if the provided response is not from Elastic, or is missing expected data
-     * @throws \LogicException Thrown if the provided response is valid, but is an error
+     * @throws InvalidArgumentException Thrown if the provided response is not from Elastic, or is missing expected data
+     * @throws LogicException           Thrown if the provided response is valid, but is an error
      */
-    protected function validateResponse(array $response)
+    protected function validateResponse(array $response): void
     {
         $queries = $this->query->getQueries();
+
         // We rely on the results coming back in the same order as the queries - there are no identifying
         // characteristics on the result that we can match across
         foreach ($response as $index => $singleResponse) {
+            /** @var \Elastic\EnterpriseSearch\Response\Response $singleResponse */
             $singleResult = SearchResult::create($queries[$index]->getQuery(), $singleResponse, true);
             $this->addResult($singleResult);
         }

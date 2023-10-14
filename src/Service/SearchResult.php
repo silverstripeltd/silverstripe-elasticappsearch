@@ -7,7 +7,6 @@ use InvalidArgumentException;
 use LogicException;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Control\Controller;
-use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ElasticAppSearch\Controller\ClickthroughController;
@@ -17,20 +16,18 @@ use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\ORM\PaginatedList;
 use SilverStripe\Security\Security;
 use SilverStripe\View\ArrayData;
-use \SilverStripe\View\ViewableData;
+use SilverStripe\View\ViewableData;
 
 /**
- * Class SearchResult
- * @package SilverStripe\ElasticAppSearch\Service
- *
- * Wraps a single Elastic App Search result set. When constructed, all returned documents are retrieved from the local
- * database and stored as DataObjects in the 'results' key for use in templates.
+ * Class SearchResult.
  */
 class SearchResult extends ViewableData
 {
     use Injectable;
 
-    private static $dependencies = [
+    public ?LoggerInterface $logger = null;
+
+    private static array $dependencies = [
         'logger' => '%$' . LoggerInterface::class . '.errorhandler',
     ];
 
@@ -42,87 +39,75 @@ class SearchResult extends ViewableData
      *
      * @var bool true to log clickthroughs back to Elastic App Search, false to disable this feature
      */
-    private static $track_clickthroughs = true;
+    private static bool $track_clickthroughs = true;
+
+    private string $query = '';
+
+    private ?array $response = null;
+
+    private ?PaginatedList $results = null;
+
+    private ?ArrayList $facets = null;
 
     /**
      * Elastic has a default limit of handling 100 pages. If you request a page beyond this limit
      * then an error occurs. We use this to limit the number of pages that are returned.
      */
-    private static $elastic_page_limit = 100;
+    private static int $elastic_page_limit = 100;
 
     /**
      * Elastic has a default limit of 10000 results returned in a single query
      */
-    private static $elastic_results_limit = 10000;
+    private static int $elastic_results_limit = 10000;
 
     /**
-     * @var LoggerInterface
+     * A list of spelling suggestions for the given result set, if enabled.
      */
-    public $logger;
+    private ?ArrayList $spellingSuggestions = null;
+
+    private bool $isPartOfMultiSearch = false;
 
     /**
-     * @var string
-     */
-    private $query;
-
-    /**
-     * @var array
-     */
-    private $response;
-
-    /**
-     * @var PaginatedList
-     */
-    private $results;
-
-    /**
-     * @var ArrayList
-     */
-    private $facets;
-
-    /**
-     * @var ArrayList A list of spelling suggestions for the given result set, if enabled
-     */
-    private $spellingSuggestions;
-
-    /**
-     * @var bool
-     */
-    private $isPartOfMultiSearch = false;
-
-    /**
-     * @var string The name of the engine this search result has been returned from. Used for clickthrough tracking.
+     * The name of the engine this search result has been returned from. Used for clickthrough tracking.
+     *
      * @see getClickthroughLink()
      */
-    private $engineName = "";
+    private string $engineName = '';
 
     /**
-     * @var array A set of tags that are passed through when clickthroughs are tracked.
+     * A set of tags that are passed through when clickthroughs are tracked.
+     *
      * @see getClickthroughLink()
      */
-    private $tags = [];
-
-    private static $casting = [
-        'Query' => 'Varchar',
-    ];
+    private array $tags = [];
 
     public function __construct(string $query, array $response, bool $isPartOfMultiSearch = false)
     {
         parent::__construct();
 
         $this->query = $query;
-        $this->response = $response;
         $this->isPartOfMultiSearch = $isPartOfMultiSearch;
-        $this->validateResponse($response);
+        $this->setResponse($response);
     }
 
-    /**
-     * @return PaginatedList
-     */
+    public function setResponse(array $response): self
+    {
+        $this->validateResponse($response);
+
+        $this->response = $response;
+
+        return $this;
+    }
+
+    public function getResponse(): array
+    {
+        return $this->response;
+    }
+
     public function getResults(): PaginatedList
     {
         if (!isset($this->results)) {
-            $this->results = $this->extractResults($this->response);
+            $this->results = $this->extractResults();
         }
 
         return $this->results;
@@ -131,20 +116,16 @@ class SearchResult extends ViewableData
     public function getFacets(): ArrayList
     {
         if (!isset($this->facets)) {
-            $this->facets = $this->extractFacets($this->response);
+            $this->facets = $this->extractFacets();
         }
 
         return $this->facets;
     }
 
-    /**
-     * @param string $facet
-     * @param string|null $name
-     */
     public function getFacet(string $facet, ?string $name = null): ArrayList
     {
         if (!isset($this->facets)) {
-            $this->facets = $this->extractFacets($this->response);
+            $this->facets = $this->extractFacets();
         }
 
         $filtered = $this->facets->filter(
@@ -169,24 +150,33 @@ class SearchResult extends ViewableData
     public function setSpellingSuggestions(ArrayList $suggestions): self
     {
         $this->spellingSuggestions = $suggestions;
+
         return $this;
     }
 
     public function setEngineName(string $name): self
     {
         $this->engineName = $name;
+
         return $this;
     }
 
     public function setTags(array $tags): self
     {
         $this->tags = $tags;
+
         return $this;
     }
 
-    protected function extractResults(array $response): PaginatedList
+    public function getQuery(): string
+    {
+        return $this->query;
+    }
+
+    protected function extractResults(): PaginatedList
     {
         $list = ArrayList::create();
+        $response = $this->getResponse();
 
         foreach ($response['results'] as $result) {
             // Get the DataObject ID and ClassName out for lookup in the database
@@ -232,12 +222,12 @@ class SearchResult extends ViewableData
             }
 
             if (sizeof($snippets) > 0) {
-                $obj->ElasticSnippets = ArrayData::create($snippets);
+                $obj->setField('ElasticSnippets', ArrayData::create($snippets));
             }
 
             // Build data required to process the clickthrough link
             if ($this->config()->track_clickthroughs) {
-                $obj->ClickthroughLink = $this->getClickthroughLink($result, $obj);
+                $obj->setField('ClickthroughLink', $this->getClickthroughLink($result, $obj));
             }
 
             $this->extend('augmentSearchResult', $obj);
@@ -276,13 +266,17 @@ class SearchResult extends ViewableData
         return $list;
     }
 
-    /**
-     * @param array $response
-     * @return ArrayList
-     */
-    protected function extractFacets(array $response): ArrayList
+    protected function extractFacets(): ArrayList
     {
+        $response = $this->getResponse();
+
         $list = ArrayList::create();
+
+        // Ensure facets key exists
+        if (!array_key_exists('facets', $response) || !is_array($response['facets'])) {
+            return $list;
+        }
+
         foreach ($response['facets'] as $property => $results) {
             foreach ($results as $index => $result) {
                 $data = ArrayList::create();
@@ -307,11 +301,10 @@ class SearchResult extends ViewableData
     }
 
     /**
-     * @param array $response
      * @throws InvalidArgumentException Thrown if the provided response is not from Elastic, or is missing expected data
-     * @throws LogicException Thrown if the provided response is valid, but is an error
+     * @throws LogicException           Thrown if the provided response is valid, but is an error
      */
-    protected function validateResponse(array $response)
+    protected function validateResponse(array $response): void
     {
         // Ensure we don't have errors in our response
         if (array_key_exists('errors', $response)) {
@@ -357,10 +350,10 @@ class SearchResult extends ViewableData
     /**
      * Get the clickthrough link for a given DataObject. This requires a set of data provided by the SearchService
      * during creation of the object to get context. We then create a JSON object and base64 encode it to get a URL-safe
-     * string that can be inserted in a tracking URL, which will be picked up by the @link ClickthroughController and a
+     * string that can be inserted in a tracking URL, which will be picked up by the @param mixed $result
+     * @see ClickthroughController and a
      * clickthrough registered in Elastic App Search before the user is directed to the search result.
      *
-     * @return string
      */
     private function getClickthroughLink($result, DataObject $dataObject): string
     {
@@ -379,6 +372,7 @@ class SearchResult extends ViewableData
         ];
 
         $linkData = sprintf('?d=%s', base64_encode(json_encode($data)));
+
         return Controller::join_links($controllerLink, $linkData);
     }
 
@@ -387,12 +381,16 @@ class SearchResult extends ViewableData
      * class names you're searching over on AppSearchService (see _config/analytics.yml for some defaults).
      *
      * @param DataObject $object The DataObject to look up
+     *
      * @return string Either the human-readable short string, or the FQCN if one can't be found
+     * @throws \Psr\Container\NotFoundExceptionInterface
+     *
      */
     private function dataObjectToShortName(DataObject $object): string
     {
         /** @var AppSearchService $service */
         $service = Injector::inst()->get(AppSearchService::class);
+
         return $service->classToType(DataObject::getSchema()->baseDataClass($object));
     }
 }

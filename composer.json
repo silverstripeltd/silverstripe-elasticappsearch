@@ -1,45 +1,47 @@
 {
     "name": "silverstripeltd/silverstripe-elasticappsearch",
     "description": "Connector module for querying Elastic App Search from SilverStripe CMS",
-
     "type": "silverstripe-vendormodule",
     "license": "proprietary",
     "homepage": "https://github.com/silverstripeltd/silverstripe-elasticappsearch",
-
     "authors": [
         {
             "name": "madmatt",
             "homepage": "https://github.com/madmatt"
         }
     ],
-
-    "keywords": ["SilverStripe", "SilverStripe CMS", "Elastic", "Elastic App Search"],
-
+    "keywords": [
+        "SilverStripe",
+        "SilverStripe CMS",
+        "Elastic",
+        "Elastic App Search"
+    ],
     "require": {
-		"php": "^7.4 || ^8.0",
-        "silverstripe-terraformers/app-search-php-8": "^7.14",
-        "silverstripe/framework": "^4",
-        "mockery/mockery": "^1.6.5"
+        "php": "^8.1",
+        "elastic/enterprise-search": "^8.7",
+        "silverstripe/framework": "^5"
     },
-
     "require-dev": {
         "squizlabs/php_codesniffer": "^3",
-        "phpunit/phpunit": "^9.5"
+        "mockery/mockery": "^1.6.5",
+        "phpunit/phpunit": "^9.5",
+        "phpcompatibility/php-compatibility": "^9.3"
     },
-
     "autoload": {
         "psr-4": {
             "SilverStripe\\ElasticAppSearch\\": "silverstripe-elasticappsearch/src"
         }
     },
-
-    "suggest": {
-        "elasticsearch/elasticsearch": "Allows the use of spellcheck (see silverstripe-elasticappsearch README for details)"
-    },
     "config": {
         "allow-plugins": {
             "composer/installers": true,
-            "silverstripe/vendor-plugin": true
+            "silverstripe/vendor-plugin": true,
+            "php-http/discovery": true
         }
+    },
+    "scripts": {
+        "phpcs": "phpcs app --ignore=app/src/App/Tasks/*,app/client/node_modules/* --standard=phpcs.xml --extensions=php --encoding=utf-8",
+        "phpcbf": "phpcbf app --ignore=app/src/App/Tasks/*,app/client/node_modules/* --standard=phpcs.xml --extensions=php --encoding=utf-8",
+        "php-compatible": "phpcs -p src --standard=vendor/phpcompatibility/php-compatibility/PHPCompatibility --runtime-set testVersion 8.2"
     }
 }

@@ -10,7 +10,7 @@ class MultiSearchQuery
     /**
      * @var SearchQuery[]
      */
-    private $queries;
+    private array $queries = [];
 
     /**
      * @param SearchQuery[] $queries
@@ -29,36 +29,25 @@ class MultiSearchQuery
         return $this;
     }
 
-    /**
-     * @return SearchQuery[]
-     */
     public function getQueries(): array
     {
         return $this->queries ?? [];
     }
 
     /**
-     * Renders the data for passing into the Elastic App Client
-     *
-     * @return array
+     * Renders the data for passing into the Elastic App Client.
      */
-    public function renderQueries(): array
+    public function getSearchParams(): array
     {
         $data = [];
         foreach ($this->getQueries() as $query) {
-            array_push($data, array_merge(
-                ['query' => $query->getQuery()],
-                $query->getSearchParamsAsArray()
-            ));
+            $data[] = $query->getSearchParams();
         }
+
         return $data;
     }
 
-    /**
-     * @param SearchQuery $query
-     * @return $this
-     */
-    public function addQuery(SearchQuery $query): MultiSearchQuery
+    public function addQuery(SearchQuery $query): self
     {
         if ($this->queries !== null && count($this->queries) >= 10) {
             Injector::inst()->get(LoggerInterface::class)->warning(

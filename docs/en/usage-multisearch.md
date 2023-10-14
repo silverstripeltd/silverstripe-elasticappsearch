@@ -29,7 +29,6 @@ use SilverStripe\ElasticAppSearch\Query\SearchQuery;
 use SilverStripe\ElasticAppSearch\Service\AppSearchService;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\SearchService\Services\AppSearch\AppSearchService as SilverStripeAppSearchService;
 use stdClass;
 
 /*...*/
@@ -67,7 +66,7 @@ $multisearchQuery->addQuery($contentTypeQuery);
 // Could equally do:
 // $multisearchQuery->setQueries([$keywordQuery, $contentTypeQuery]);
 
-$engineName = SilverStripeAppSearchService::environmentizeIndex('content');
+$engineName = $service->environmentizeIndex('content');
 
 $keywordResults = null;
 $contentTypeResults = null;

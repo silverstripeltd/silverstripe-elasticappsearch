@@ -10,7 +10,7 @@ use SilverStripe\Dev\SapphireTest;
 
 class MultiSearchQueryTest extends SapphireTest
 {
-    public function testAddQuery()
+    public function testAddQuery(): void
     {
         /** @var MultiSearchQuery $multisearchQuery */
         $multisearchQuery = Injector::inst()->create(MultiSearchQuery::class);
@@ -33,7 +33,7 @@ class MultiSearchQueryTest extends SapphireTest
         $this->assertEquals($barQuery, $multisearchQuery->getQueries()[1]);
     }
 
-    public function testSetQueries()
+    public function testSetQueries(): void
     {
         /** @var MultiSearchQuery $multisearchQuery */
         $multisearchQuery = Injector::inst()->create(MultiSearchQuery::class);
@@ -58,7 +58,7 @@ class MultiSearchQueryTest extends SapphireTest
         $this->assertCount(10, $multisearchQuery->getQueries());
     }
 
-    public function testRenderQueries()
+    public function testRenderQueries(): void
     {
         /** @var MultiSearchQuery $multisearchQuery */
         $multisearchQuery = Injector::inst()->create(MultiSearchQuery::class);
@@ -78,29 +78,14 @@ class MultiSearchQueryTest extends SapphireTest
         );
 
         $multisearchQuery->setQueries([$fooQuery, $barQuery]);
-        $serializer = new SmartSerializer();
-        $sortedQueries = $multisearchQuery->renderQueries();
-        ksort($sortedQueries);
+        $sortedQueries = $multisearchQuery->getSearchParams();
 
-        $expectedJson = <<<JSON
-[
-    {
-        "query": "foo"
-    },
-    {
-        "query": "bar",
-        "sort": [
-            {"baz": "desc"},
-            {"qux": "asc"},
-            {"_score": "desc"}
-        ]
-    }
-]
-JSON;
-
-        $this->assertJsonStringEqualsJsonString(
-            $expectedJson,
-            $serializer->serialize($sortedQueries)
-        );
+        $this->assertSame($fooQuery->getSearchParams()->query, 'foo');
+        $this->assertSame($barQuery->getSearchParams()->query, 'bar');
+        $this->assertSame($barQuery->getSearchParams()->sort, [
+            ['baz' => "desc"],
+            ['qux' => "asc"],
+            ['_score' => "desc"],
+        ]);
     }
 }

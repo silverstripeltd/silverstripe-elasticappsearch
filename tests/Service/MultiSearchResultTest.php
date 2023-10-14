@@ -13,7 +13,7 @@ use SilverStripe\ORM\PaginatedList;
 
 class MultiSearchResultTest extends SapphireTest
 {
-    public function testResponseWithoutRequestIDAllowed()
+    public function testResponseWithoutRequestIDAllowed(): void
     {
         /** @var MultiSearchQuery $multisearchQuery */
         $multisearchQuery = Injector::inst()->create(MultiSearchQuery::class);
