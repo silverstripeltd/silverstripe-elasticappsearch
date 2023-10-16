@@ -16,9 +16,9 @@
     "keywords": ["SilverStripe", "SilverStripe CMS", "Elastic", "Elastic App Search"],
 
     "require": {
-		"php": "^7.4 || ^8.0",
+		"php": "^8.0",
         "silverstripe-terraformers/app-search-php-8": "^7.14",
-        "silverstripe/framework": "^4",
+        "silverstripe/framework": "^4.13",
         "mockery/mockery": "^1.6.5"
     },
 
@@ -39,7 +39,8 @@
     "config": {
         "allow-plugins": {
             "composer/installers": true,
-            "silverstripe/vendor-plugin": true
+            "silverstripe/vendor-plugin": true,
+            "php-http/discovery": true
         }
     }
 }
