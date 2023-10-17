@@ -30,7 +30,7 @@ class ElasticsearchGateway
             // Handle differences between v7 and v8 of the elastic php client module:
             // - Different namespaces
             // - Params for setApiKey reversed
-            if (class_exists('Elastic\Elasticsearch\ClientBuilder'))  {
+            if (class_exists('Elastic\Elasticsearch\ClientBuilder')) {
                 $this->client = ClientBuilderV8::create()
                     ->setElasticCloudId($elasticCloudId)
                     ->setApiKey($apiKey, $apiKeyId)
