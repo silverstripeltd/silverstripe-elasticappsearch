@@ -2,7 +2,8 @@
 
 namespace SilverStripe\ElasticAppSearch\Service;
 
-use Elastic\Elasticsearch\ClientBuilder;
+use Elasticsearch\ClientBuilder as ClientBuilderV7;
+use Elastic\Elasticsearch\ClientBuilder as ClientBuilderV8;
 use Elastic\Elasticsearch\Response\Elasticsearch;
 use Exception;
 use LogicException;
@@ -377,7 +378,7 @@ class SpellcheckService
             throw new LogicException('Required environment variable ELASTICSEARCH_API_KEY not configured.');
         }
 
-        if (!class_exists(ClientBuilder::class)) {
+        if (!class_exists(ClientBuilderV7::class) && !class_exists(ClientBuilderV8::class)) {
             throw new LogicException('The elasticsearch/elasticsearch Composer library is not installed.');
         }
 
