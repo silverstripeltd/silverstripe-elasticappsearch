@@ -117,7 +117,13 @@ class SpellcheckService
 
             // Attempt to make a connection to Elasticsearch
             $suggestions = $this->elasticsearchGateway->search($searchParams);
-            $extractedSuggestions = $this->extractPotentialSuggestions($suggestions->asArray());
+
+            // V8 of the elastic php client returns Elasticsearch response, which needs to be converted to an array
+            if ($suggestions instanceof Elasticsearch) {
+                $suggestions = $suggestions->asArray();
+            }
+
+            $extractedSuggestions = $this->extractPotentialSuggestions($suggestions);
             // Now we have a sorted, flattened list of potential suggestions, and we just need to pick some
             $selectedSuggestions = $this->selectSuggestions($extractedSuggestions, $query);
 
