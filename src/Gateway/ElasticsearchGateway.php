@@ -2,8 +2,8 @@
 
 namespace SilverStripe\ElasticAppSearch\Gateway;
 
-use Elasticsearch\ClientBuilder as ClientBuilderV7;
-use Elastic\Elasticsearch\ClientBuilder as ClientBuilderV8;
+use Elasticsearch\ClientBuilder as ClientBuilderLegacy;
+use Elastic\Elasticsearch\ClientBuilder as ClientBuilder;
 use Elasticsearch\Client;
 use SilverStripe\Core\Environment;
 
@@ -31,12 +31,12 @@ class ElasticsearchGateway
             // - Different namespaces
             // - Params for setApiKey reversed
             if (class_exists('Elastic\Elasticsearch\ClientBuilder')) {
-                $this->client = ClientBuilderV8::create()
+                $this->client = ClientBuilder::create()
                     ->setElasticCloudId($elasticCloudId)
                     ->setApiKey($apiKey, $apiKeyId)
                     ->build();
             } else {
-                $this->client = ClientBuilderV7::create()
+                $this->client = ClientBuilderLegacy::create()
                     ->setElasticCloudId($elasticCloudId)
                     ->setApiKey($apiKeyId, $apiKey)
                     ->build();
