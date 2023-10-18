@@ -45,6 +45,18 @@ class SearchResult extends ViewableData
     private static $track_clickthroughs = true;
 
     /**
+     * Elastic has a hardcoded limit of handling 100 pages. If you request a page beyond this limit
+     * then an error occurs. We use this to limit the number of pages that are returned in the results.
+     */
+    private $elastic_page_limit = 100;
+
+    /**
+     * Whilst we might limit the number of results being returned in the paginated list
+     * store the actual number of results.
+     */
+    private int $actual_result_count = 0;
+
+    /**
      * @var LoggerInterface
      */
     public $logger;
@@ -149,12 +161,12 @@ class SearchResult extends ViewableData
 
         return ArrayList::create();
     }
-    
+
     public function getSpellingSuggestions(): ?ArrayList
     {
         return $this->spellingSuggestions;
     }
-    
+
     public function setSpellingSuggestions(ArrayList $suggestions): self
     {
         $this->spellingSuggestions = $suggestions;
@@ -244,14 +256,28 @@ class SearchResult extends ViewableData
             }
         }
 
+        // Limit results to 100 pages
+        $pageSize = $response['meta']['page']['size'];
+        $this->actual_result_count = $response['meta']['page']['total_results'];
+        $totalResults = min([$this->actual_result_count, $this->elastic_page_limit * $pageSize]);
+
         // Convert the ArrayList we have into a PaginatedList so we can access pagination features within templates
         $list = PaginatedList::create($list);
         $list->setLimitItems(false);
-        $list->setPageLength($response['meta']['page']['size']);
-        $list->setTotalItems($response['meta']['page']['total_results']);
+        $list->setPageLength($pageSize);
+        $list->setTotalItems($totalResults);
         $list->setCurrentPage($response['meta']['page']['current']);
 
         return $list;
+    }
+
+    /**
+     * Return the actual number of results a query returns, regardless of any limits
+     * on pagination.
+     */
+    public function getActualResultCount(): int
+    {
+        return $this->actual_result_count;
     }
 
     /**
