@@ -125,15 +125,32 @@ class SearchResultTest extends SapphireTest
         $this->assertNotNull($result->getFacet('topic', 'sub_topics'));
     }
 
-    private function getValidResponseFromBase(?array $toMerge = null): array
+    // Test that a search limits results
+    public function testPageLimits(): void
+    {
+        $result = new SearchResult('query',
+            $this->getValidResponseFromBase(
+                [],
+                10000,
+                1000
+            )
+        );
+
+        $paginatedResults = $result->getResults();
+        $this->assertEquals(100, $paginatedResults->TotalPages());
+        $this->assertEquals(1000, $paginatedResults->TotalItems());
+        $this->assertEquals(10000, $result->getActualResultCount());
+    }
+
+    private function getValidResponseFromBase(?array $toMerge = null, $total_results = 10, $total_pages = 1): array
     {
         $base = [
             'meta' => [
                 'page' => [
                     'current' => 1,
                     'size' => 10,
-                    'total_pages' => 1,
-                    'total_results' => 10,
+                    'total_pages' => $total_pages,
+                    'total_results' => $total_results,
                 ],
                 'request_id' => 'test1234'
             ],
