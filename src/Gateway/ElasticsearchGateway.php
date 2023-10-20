@@ -27,9 +27,7 @@ class ElasticsearchGateway
             $apiKeyId = Environment::getEnv('ELASTICSEARCH_API_KEY_ID');
             $apiKey = Environment::getEnv('ELASTICSEARCH_API_KEY');
 
-            // Handle differences between v7 and v8 of the elastic php client module:
-            // - Different namespaces
-            // - Params for setApiKey reversed
+            // Handle namespace and setApiKey changes made in Version 8 of the elastic php client module:
             if (class_exists('Elastic\Elasticsearch\ClientBuilder')) {
                 $this->client = ClientBuilder::create()
                     ->setElasticCloudId($elasticCloudId)
