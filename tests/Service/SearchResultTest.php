@@ -128,7 +128,8 @@ class SearchResultTest extends SapphireTest
     // Test that a search limits results
     public function testPageLimits(): void
     {
-        $result = new SearchResult('query',
+        $result = new SearchResult(
+            'query',
             $this->getValidResponseFromBase(
                 [],
                 10000,
