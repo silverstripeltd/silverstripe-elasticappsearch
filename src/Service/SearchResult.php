@@ -48,18 +48,12 @@ class SearchResult extends ViewableData
      * Elastic has a default limit of handling 100 pages. If you request a page beyond this limit
      * then an error occurs. We use this to limit the number of pages that are returned.
      */
-    private $elastic_page_limit = 100;
+    private static $elastic_page_limit = 100;
 
     /**
      * Elastic has a default limit of 10000 results returned in a single query
      */
-    private $elastic_results_limit = 10000;
-
-    /**
-     * Whilst we might limit the number of results being returned in the paginated list
-     * store the actual number of results a query returns.
-     */
-    private int $actual_result_count = 0;
+    private static $elastic_results_limit = 10000;
 
     /**
      * @var LoggerInterface
@@ -261,15 +255,15 @@ class SearchResult extends ViewableData
             }
         }
 
-        // Limit results to 100 pages
         $pageSize = $response['meta']['page']['size'];
-        $this->actual_result_count = $response['meta']['page']['total_results'];
 
-        // Calculate total results that can be handled, taking into account default elastic limits.
+        // Calculate the total paginated results that can be handled, taking into account the default elastic limits.
+        // The page size also needs to be considered here so that we only handle the number of results rendered
+        // on the first 100 pages (elastic_page_limit * $pageSize).
         $totalResults = min([
-            $this->actual_result_count,
-            $this->elastic_page_limit * $pageSize,
-            $this->elastic_results_limit
+            $response['meta']['page']['total_results'],
+            $this->config()->elastic_page_limit * $pageSize,
+            $this->config()->elastic_results_limit
         ]);
 
         // Convert the ArrayList we have into a PaginatedList so we can access pagination features within templates
@@ -280,15 +274,6 @@ class SearchResult extends ViewableData
         $list->setCurrentPage($response['meta']['page']['current']);
 
         return $list;
-    }
-
-    /**
-     * Return the actual number of results a query returns, regardless of any limits
-     * on pagination.
-     */
-    public function getActualResultCount(): int
-    {
-        return $this->actual_result_count;
     }
 
     /**

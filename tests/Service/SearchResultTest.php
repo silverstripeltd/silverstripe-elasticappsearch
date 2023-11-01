@@ -140,7 +140,6 @@ class SearchResultTest extends SapphireTest
         $paginatedResults = $result->getResults();
         $this->assertEquals(100, $paginatedResults->TotalPages());
         $this->assertEquals(1000, $paginatedResults->TotalItems());
-        $this->assertEquals(10000, $result->getActualResultCount());
     }
 
     private function getValidResponseFromBase(?array $toMerge = null, $total_results = 10, $total_pages = 1): array
