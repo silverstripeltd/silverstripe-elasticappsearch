@@ -13,68 +13,122 @@
 
 This module does not provide a search results page out of the box. You an hook it up to your existing results page, or create a new one. A minimal example of a `SearchResultsController` is below, along with the Silverstripe template that might go alongside it.
 
-## SearchResultsController
+## `SearchResults.php`
+
 ```php
 <?php
 
-use SilverStripe\ElasticAppSearch\Query\SearchQuery,
-    SilverStripe\ElasticAppSearch\Service\AppSearchService,
-    SilverStripe\Core\Convert,
-    SilverStripe\Core\Injector\Injector,
-    SilverStripe\Forms\Form,
-    SilverStripe\Forms\FieldList,
-    SilverStripe\Forms\TextField,
-    SilverStripe\Forms\FormAction;
+namespace App\Pages;
+
+use Page;
+
+class SearchResults extends Page
+{
+
+    private static string $table_name = 'SearchResults';
+
+    private static string $icon_class = 'font-icon-p-search';
+
+    private static string $singular_name = 'Search results page';
+
+    private static string $plural_name = 'Search results pages';
+
+    private static string $description = 'Display search results from Elastic search';
+
+}
+
+```
+
+## `SearchResultsController.php`
+
+```php
+<?php
+
+namespace App\Pages;
+
+use PageController;
+use Psr\Log\LoggerInterface;
+use SilverStripe\Core\Convert;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\ElasticAppSearch\Query\SearchQuery;
+use SilverStripe\ElasticAppSearch\Service\AppSearchService;
+use SilverStripe\ElasticAppSearch\Service\SearchResult;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\Form;
+use SilverStripe\Forms\FormAction;
+use SilverStripe\Forms\TextField;
+use Throwable;
 
 class SearchResultsController extends PageController
 {
-    private static $allowed_actions = [
-        'SearchForm'
+
+    private static array $allowed_actions = [
+        'SearchForm',
     ];
 
-    public function SearchForm()
+    public function SearchForm(): Form
     {
+        // The keyword that we want to search
+        $keywords = Convert::raw2xml($this->getRequest()->getVar('q'));
+
         return Form::create(
             $this,
             __FUNCTION__,
             FieldList::create(
-                TextField::create('q')
+                TextField::create('q', 'Terms', $keywords)
             ),
             FieldList::create(
-                FormAction::create('results', 'Search')
+                FormAction::create('search', 'Search')
             )
-        )->disableSecurityToken();
+        )
+            ->setFormAction($this->dataRecord->Link())
+            ->setFormMethod('GET')
+            ->disableSecurityToken();
     }
 
-    public function SearchResults($data, Form $form)
+    /**
+     * Given URL parameters, create a SearchQuery object and pass it to Elastic App Search, then return the results (if
+     * any) to the template for parsing.
+     */
+    public function SearchResults(): ?SearchResult
     {
-        $keywords = Convert::raw2xml($data['q']);
+        // The keywords that we want to search
+        $keywords = Convert::raw2xml($this->getRequest()->getVar('q'));
 
-        /** @var AppSearchService $service */
-        $service = Injector::inst()->get(AppSearchService::class);
-        
-        /** @var SearchQuery $query */
-        $query = Injector::inst()->get(SearchQuery::class);
-        $query->setQuery($keywords);
-        $query->addResultField('title', 'snippet', 20); // Assumes you have a 'title' field in your schema - see below
-        
-        // This is the Elastic App Search engine name, this could just be a simple string - but here we use the
-        // silverstripe-search-service code to ensure our engine name always matches the YML configuration used in that
-        // module.
-        $engineName = $service->environmentizeIndex('content');
-        
-        try {
-            return $service->search($query, $engineName, $this->getRequest());        
-        } catch (Exception $e) {
-            return null;
+        if (!$keywords) {
+            return null; // No results unless we search for something
         }
+
+        try {
+            $service = AppSearchService::create();
+
+            $query = SearchQuery::create();
+
+            $query->setQuery($keywords);
+            // Assumes you have a 'title' field in your schema - see below
+            $query->addResultField('title', 'snippet', 20);
+
+            // Note: The second value here *must* match the name of the engine (see elasticappsearch.yml)
+            // We combine the ENTERPRISE_SEARCH_ENGINE_PREFIX env var with the name of the engine set in YML to get
+            // the full name of the engine to search on.
+            $engineName = $service->environmentizeIndex('main');
+
+            return $service->search($query, $engineName, $this->getRequest());
+        } catch (Throwable $e) {
+            // Log the error without breaking the page
+            Injector::inst()->get(LoggerInterface::class)
+                ->error(sprintf('Elastic error: %s', $e->getMessage()), ['elastic' => $e]);
+        }
+
+        return null;
     }
+
 }
 ```
 
-## SearchResultsController.ss
+## `SearchResults.ss`
 
-The corresponding SearchResultsController template might look like this:
+The corresponding SearchResults template might look like this:
 
 ```html
 <div class="search-form">$SearchForm</div>
@@ -93,7 +147,7 @@ The corresponding SearchResultsController template might look like this:
         <%-- In addition to what you might normally call, you can also access $ElasticSnippets.field to get access --%>
         <%-- to any snippets (e.g. highlighted text) that you requested of Elastic. For example, using the example --%>
         <%-- code above you could use $ElasticSnippets.title --%>
-        
+
         <%-- Note the use of $ClickthroughLink here instead of just $Link. This enables analytics tracking in --%>
         <%-- Elastic App Search (see the Configuration section below for more info on this). --%>
         <li><a href="$ClickthroughLink">$Title</a></li>

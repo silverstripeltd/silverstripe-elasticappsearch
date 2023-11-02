@@ -8,7 +8,6 @@ use Psr\Log\LoggerInterface;
 use SilverStripe\Control\HTTP;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Config\Configurable;
-use SilverStripe\Core\Environment;
 use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ElasticAppSearch\Gateway\AppSearchGateway;
