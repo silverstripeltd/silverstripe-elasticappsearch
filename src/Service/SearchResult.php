@@ -8,7 +8,6 @@ use LogicException;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Control\Controller;
 use SilverStripe\Core\Injector\Injectable;
-use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ElasticAppSearch\Controller\ClickthroughController;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataObject;
@@ -18,9 +17,6 @@ use SilverStripe\Security\Security;
 use SilverStripe\View\ArrayData;
 use SilverStripe\View\ViewableData;
 
-/**
- * Class SearchResult.
- */
 class SearchResult extends ViewableData
 {
     use Injectable;
@@ -302,7 +298,7 @@ class SearchResult extends ViewableData
 
     /**
      * @throws InvalidArgumentException Thrown if the provided response is not from Elastic, or is missing expected data
-     * @throws LogicException           Thrown if the provided response is valid, but is an error
+     * @throws LogicException Thrown if the provided response is valid, but is an error
      */
     protected function validateResponse(array $response): void
     {
@@ -353,7 +349,6 @@ class SearchResult extends ViewableData
      * string that can be inserted in a tracking URL, which will be picked up by the @param mixed $result
      * @see ClickthroughController and a
      * clickthrough registered in Elastic App Search before the user is directed to the search result.
-     *
      */
     private function getClickthroughLink($result, DataObject $dataObject): string
     {
@@ -381,15 +376,11 @@ class SearchResult extends ViewableData
      * class names you're searching over on AppSearchService (see _config/analytics.yml for some defaults).
      *
      * @param DataObject $object The DataObject to look up
-     *
      * @return string Either the human-readable short string, or the FQCN if one can't be found
-     * @throws \Psr\Container\NotFoundExceptionInterface
-     *
      */
     private function dataObjectToShortName(DataObject $object): string
     {
-        /** @var AppSearchService $service */
-        $service = Injector::inst()->get(AppSearchService::class);
+        $service = AppSearchService::create();
 
         return $service->classToType(DataObject::getSchema()->baseDataClass($object));
     }

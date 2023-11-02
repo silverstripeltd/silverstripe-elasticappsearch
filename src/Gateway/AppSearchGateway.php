@@ -5,10 +5,12 @@ namespace SilverStripe\ElasticAppSearch\Gateway;
 use Elastic\EnterpriseSearch\AppSearch\Request;
 use Elastic\EnterpriseSearch\AppSearch\Schema;
 use Elastic\EnterpriseSearch\Response\Response;
+use SilverStripe\Core\Injector\Injectable;
 
 class AppSearchGateway
 {
     use ConnectionTrait;
+    use Injectable;
 
     /**
      * Performs a search of the provided engine with the given query string and (optional) search parameters using the
@@ -35,9 +37,11 @@ class AppSearchGateway
     public function logClickthrough(string $engineName, string $query, string $documentId, ?string $requestId = null, ?array $tags = null): Response
     {
         $params = new Schema\ClickParams($query, $documentId);
+
         if ($requestId) {
             $params->request_id = $requestId;
         }
+
         if (is_array($tags)) {
             $params->tags = $tags;
         }

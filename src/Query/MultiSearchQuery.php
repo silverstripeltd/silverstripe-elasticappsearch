@@ -3,10 +3,14 @@
 namespace SilverStripe\ElasticAppSearch\Query;
 
 use Psr\Log\LoggerInterface;
+use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 
 class MultiSearchQuery
 {
+
+    use Injectable;
+
     /**
      * @var SearchQuery[]
      */

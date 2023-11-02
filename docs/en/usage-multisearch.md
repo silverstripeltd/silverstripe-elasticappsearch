@@ -33,11 +33,9 @@ use stdClass;
 
 /*...*/
 
-/** @var AppSearchService $service */
-$service = Injector::inst()->get(AppSearchService::class);
+$service = AppSearchService::create();
 
-/** @var SearchQuery $keywordQuery */
-$keywordQuery = Injector::inst()->create(SearchQuery::class);
+$keywordQuery = SearchQuery::create();
 $keywordQuery->setQuery('biscuits');
 
 $keywordFilters = new stdClass();
@@ -45,8 +43,7 @@ $keywordFilters->all = [];
 $keywordFilters->all[] = (object) ['content_type' => ['page']];
 $keywordQuery->addRawFilters($keywordFilters);
 
-/** @var SearchQuery $contentTypeQuery */
-$contentTypeQuery = Injector::inst()->create(SearchQuery::class);
+$contentTypeQuery = SearchQuery::create();
 $contentTypeQuery->setQuery('biscuits');
 $contentTypeQuery->setPagination(0, 1);
 
@@ -58,8 +55,7 @@ $facets->content_type[] = (object) [
 
 $contentTypeQuery->addRawFacets($facets);
 
-/** @var MultiSearchQuery $multisearchQuery */
-$multisearchQuery = Injector::inst()->create(MultiSearchQuery::class);
+$multisearchQuery = MultiSearchQuery::create();
 $multisearchQuery->addQuery($keywordQuery);
 $multisearchQuery->addQuery($contentTypeQuery);
 

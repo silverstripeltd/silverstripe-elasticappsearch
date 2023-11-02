@@ -4,9 +4,12 @@ namespace SilverStripe\ElasticAppSearch\Controller;
 
 use Exception;
 use LogicException;
+use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPRequest;
+use SilverStripe\Control\HTTPResponse;
+use SilverStripe\Control\HTTPResponse_Exception;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ElasticAppSearch\Gateway\AppSearchGateway;
 use SilverStripe\ElasticAppSearch\Service\AppSearchService;
@@ -24,10 +27,15 @@ class ClickthroughController extends Controller
 
     private static string $base_url = '_click';
 
+    /**
+     * @param HTTPRequest $request
+     * @return HTTPResponse|void
+     * @throws NotFoundExceptionInterface
+     * @throws HTTPResponse_Exception
+     */
     public function index(HTTPRequest $request)
     {
-        /** @var AppSearchService $service */
-        $service = Injector::inst()->get(AppSearchService::class);
+        $service = AppSearchService::create();
 
         // Get the base64 encoded string that we want to look at
         $data = base64_decode($request->getVar('d'));
@@ -58,10 +66,11 @@ class ClickthroughController extends Controller
             $obj = $class::get()->byID($data->id);
 
             if ($obj && $obj->exists()) {
-                $this->registerClickthrough($data); // Attempt to register a clickthrough, swallow any errors
-                $link = $obj->Link();
+                // Attempt to register a clickthrough, swallow any errors
+                $this->registerClickthrough($data);
 
-                return $this->redirect($obj->Link(), 302); // Force temporary redirect
+                // Force temporary redirect
+                return $this->redirect($obj->Link(), 302);
             }
         } catch (Exception $e) {
             // If we can't find the object, then we can't link to the page as it no longer exists
@@ -72,6 +81,7 @@ class ClickthroughController extends Controller
             );
 
             Injector::inst()->get(LoggerInterface::class)->error($err);
+
             $this->httpError(404);
         }
 
@@ -105,10 +115,11 @@ class ClickthroughController extends Controller
             return;
         }
 
-        /** @var AppSearchGateway $gateway */
-        $gateway = Injector::inst()->get(AppSearchGateway::class);
-        $requestId = isset($data->requestId) ? $data->requestId : null;
-        $tags = (isset($data->tags) && sizeof($data->tags) > 0) ? $data->tags : null; // An empty array breaks Elastic
+        $gateway = AppSearchGateway::create();
+        $requestId = $data->requestId ?? null;
+        $tags = (isset($data->tags) && sizeof($data->tags) > 0)
+            ? $data->tags
+            : null; // An empty array breaks Elastic
 
         try {
             $gateway->logClickthrough($data->engineName, $data->query, $data->documentId, $requestId, $tags);

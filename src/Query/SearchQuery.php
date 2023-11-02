@@ -7,16 +7,16 @@ use Elastic\EnterpriseSearch\AppSearch\Schema\SearchFields;
 use Elastic\EnterpriseSearch\AppSearch\Schema\SearchRequestParams;
 use Elastic\EnterpriseSearch\AppSearch\Schema\SimpleObject;
 use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Injector\Injectable;
 use stdClass;
 
 class SearchQuery
 {
     use Configurable;
+    use Injectable;
 
     /**
      * @var bool Set to false to disable typo tolerance (which will force exact matches for every individual keyword)
-     *
-     * @config
      */
     private static bool $enable_typo_tolerance = true;
 
