@@ -2,7 +2,9 @@
 
 namespace SilverStripe\ElasticAppSearch\Service;
 
-use Elasticsearch\ClientBuilder;
+use Elasticsearch\ClientBuilder as ClientBuilderLegacy;
+use Elastic\Elasticsearch\ClientBuilder as ClientBuilder;
+use Elastic\Elasticsearch\Response\Elasticsearch;
 use Exception;
 use LogicException;
 use Psr\Log\LoggerInterface;
@@ -116,8 +118,13 @@ class SpellcheckService
 
             // Attempt to make a connection to Elasticsearch
             $suggestions = $this->elasticsearchGateway->search($searchParams);
-            $extractedSuggestions = $this->extractPotentialSuggestions($suggestions);
 
+            // V8 of the elastic php client returns Elasticsearch response, which needs to be converted to an array
+            if ($suggestions instanceof Elasticsearch) {
+                $suggestions = $suggestions->asArray();
+            }
+
+            $extractedSuggestions = $this->extractPotentialSuggestions($suggestions);
             // Now we have a sorted, flattened list of potential suggestions, and we just need to pick some
             $selectedSuggestions = $this->selectSuggestions($extractedSuggestions, $query);
 
@@ -371,7 +378,7 @@ class SpellcheckService
             throw new LogicException('Required environment variable ELASTICSEARCH_API_KEY not configured.');
         }
 
-        if (!class_exists(ClientBuilder::class)) {
+        if (!class_exists(ClientBuilderLegacy::class) && !class_exists(ClientBuilder::class)) {
             throw new LogicException('The elasticsearch/elasticsearch Composer library is not installed.');
         }
 
