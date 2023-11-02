@@ -16,7 +16,7 @@ class SearchQuery
     use Injectable;
 
     /**
-     * @var bool Set to false to disable typo tolerance (which will force exact matches for every individual keyword)
+     * @var bool Set to `false` to disable typo tolerance (which will force exact matches for every individual keyword)
      */
     private static bool $enable_typo_tolerance = true;
 
@@ -69,7 +69,7 @@ class SearchQuery
     public function getQueryForElastic(): string
     {
         // If typo tolerance is enabled, just return the original query as-is with no modification
-        if ($this->config()->enable_typo_tolerance) {
+        if ($this->config()->get('enable_typo_tolerance')) {
             return $this->query;
         }
 
@@ -85,6 +85,7 @@ class SearchQuery
 
         // Don't hack it together if they are doing advanced manoeuvres already
         $luceneOperators = ['AND', 'OR', 'NOT', '"'];
+
         foreach ($luceneOperators as $luceneOperator) {
             if (mb_strpos($keywordString, $luceneOperator) !== false) {
                 return $keywordString;
@@ -252,8 +253,6 @@ class SearchQuery
 
     public function getSortForRequest(): ?array
     {
-        $sort = null;
-
         if (!isset($this->sort)) {
             return null;
         }

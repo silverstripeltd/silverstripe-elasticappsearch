@@ -88,7 +88,7 @@ class SpellcheckService
             foreach ($extractedSuggestions as $suggestion) {
                 $data = ArrayData::create([
                     'Suggestion' => $suggestion,
-                    'Link' => HTTP::setGetVar($this->config()->query_param, $suggestion, $request->getURL(true)),
+                    'Link' => HTTP::setGetVar($this->config()->get('query_param'), $suggestion, $request->getURL(true)),
                 ]);
 
                 $list->push($data);
@@ -115,10 +115,10 @@ class SpellcheckService
     protected function getRequest(SearchQuery $query, string $engineName): QuerySuggestionRequest
     {
         // Number of suggestions to return, default to 10 in Elastic if not defined
-        $size = (int)$this->config()->max_spellcheck_suggestions;
+        $size = (int) $this->config()->get('max_spellcheck_suggestions');
 
         // Get suggestion fields to query Elastic on
-        $suggestionConfig = (array)$this->config()->spellcheck_suggestion_fields;
+        $suggestionConfig = (array) $this->config()->get('spellcheck_suggestion_fields');
         $esSuggestionFields = [];
 
         // Loop over each suggestion field to find the one that matches the requested engine name

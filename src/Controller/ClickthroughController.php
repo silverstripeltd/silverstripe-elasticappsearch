@@ -92,7 +92,7 @@ class ClickthroughController extends Controller
 
     public static function get_base_url()
     {
-        return self::config()->base_url;
+        return self::config()->get('base_url');
     }
 
     /**

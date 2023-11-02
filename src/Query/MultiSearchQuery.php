@@ -44,6 +44,7 @@ class MultiSearchQuery
     public function getSearchParams(): array
     {
         $data = [];
+
         foreach ($this->getQueries() as $query) {
             $data[] = $query->getSearchParams();
         }
@@ -53,7 +54,7 @@ class MultiSearchQuery
 
     public function addQuery(SearchQuery $query): self
     {
-        if ($this->queries !== null && count($this->queries) >= 10) {
+        if (count($this->queries) >= 10) {
             Injector::inst()->get(LoggerInterface::class)->warning(
                 'Maximum number of queries for multisearch is reached'
             );
