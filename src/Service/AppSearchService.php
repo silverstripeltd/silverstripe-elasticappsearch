@@ -63,7 +63,6 @@ class AppSearchService
      * These values are used for analytics clickthrough tracking, where we have to pass some data through the user's browser, so we want to disambiguate the classname from the 'type'.
      *
      * @var array Map between FQCN and a human-readable 'type' (e.g. SilverStripe\CMS\Model\SiteTree -> page).
-     *
      * @see _config/analytics.yml
      */
     private static array $classname_to_type_mapping = [];
@@ -79,14 +78,14 @@ class AppSearchService
      */
     public function search(SearchQuery $query, string $engineName, HTTPRequest $request): ?SearchResult
     {
-        $cfg = $this->config();
+        $config = $this->config();
 
         // Ensure we take pagination into account within the query. Allows overriding of pagination directly if required
         // by simply calling setPagination on the SearchQuery object prior to calling this method.
         if (!$query->hasPagination()) {
-            $pageNum = (int)$request->getVar($cfg->pagination_getvar) / (int)$cfg->pagination_size ?? 0;
+            $pageNum = (int)$request->getVar($config->get('pagination_getvar')) / (int)$config->get('pagination_size') ?? 0;
             ++$pageNum; // We do this because PaginatedList uses a zero-based index and App Search is one-based
-            $query->setPagination((int)$cfg->pagination_size, $pageNum);
+            $query->setPagination((int)$config->get('pagination_size'), $pageNum);
         }
 
         $response = $this->gateway->search($engineName, $query->getSearchParams())->asArray();
@@ -101,7 +100,7 @@ class AppSearchService
         $result->setEngineName($engineName);
 
         // If we want to inject spelling suggestions, do so
-        if ($result->getResults()->TotalItems() == 0 && $this->config()->enable_spellcheck_on_zero_results) {
+        if ($result->getResults()->TotalItems() == 0 && $config->get('enable_spellcheck_on_zero_results')) {
             $suggestions = $this->spellcheckService->getSpellingSuggestions($query, $engineName, $request);
 
             if ($suggestions instanceof ArrayList) {
@@ -117,14 +116,15 @@ class AppSearchService
      */
     public function multisearch(MultiSearchQuery $query, string $engineName, HTTPRequest $request): ?MultiSearchResult
     {
-        $cfg = $this->config();
+        $config = $this->config();
         $queries = $query->getQueries();
 
         foreach ($queries as $singleQuery) {
             if (!$singleQuery->hasPagination()) {
-                $pageNum = $request->getVar($cfg->pagination_getvar) / $cfg->pagination_size ?? 0;
-                ++$pageNum; // We do this because PaginatedList uses a zero-based index and App Search is one-based
-                $singleQuery->setPagination($cfg->pagination_size, $pageNum);
+                $pageNum = $request->getVar($config->get('pagination_getvar')) / $config->get('pagination_size') ?? 0;
+                // We do this because PaginatedList uses a zero-based index and App Search is one-based
+                ++$pageNum;
+                $singleQuery->setPagination($config->get('pagination_size'), $pageNum);
             }
         }
 
@@ -149,7 +149,7 @@ class AppSearchService
      */
     public function classToType(string $className): string
     {
-        $map = $this->config()->classname_to_type_mapping;
+        $map = $this->config()->get('classname_to_type_mapping');
 
         if (!array_key_exists($className, $map)) {
             return $className;
@@ -166,7 +166,7 @@ class AppSearchService
      */
     public function typeToClass(string $typeOrClass): ?string
     {
-        $map = $this->config()->classname_to_type_mapping;
+        $map = $this->config()->get('classname_to_type_mapping');
 
         // First check if it's in the map as the full class name
         if (in_array($typeOrClass, array_keys($map))) {

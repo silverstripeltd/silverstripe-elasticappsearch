@@ -71,7 +71,7 @@ class MultiSearchResult extends ViewableData
 
     /**
      * @throws InvalidArgumentException Thrown if the provided response is not from Elastic, or is missing expected data
-     * @throws LogicException           Thrown if the provided response is valid, but is an error
+     * @throws LogicException Thrown if the provided response is valid, but is an error
      */
     protected function validateResponse(array $response): void
     {
@@ -80,7 +80,7 @@ class MultiSearchResult extends ViewableData
         // We rely on the results coming back in the same order as the queries - there are no identifying
         // characteristics on the result that we can match across
         foreach ($response as $index => $singleResponse) {
-            /** @var \Elastic\EnterpriseSearch\Response\Response $singleResponse */
+            /** @var Response $singleResponse */
             $singleResult = SearchResult::create($queries[$index]->getQuery(), $singleResponse, true);
             $this->addResult($singleResult);
         }

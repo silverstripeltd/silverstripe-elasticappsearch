@@ -206,6 +206,7 @@ class SearchResult extends ViewableData
             // Loop over all returned result fields and extract any that have a snippet, to be added into the object so
             // they can be displayed on the website later
             $snippets = [];
+
             foreach ($result as $resultField => $fieldValues) {
                 // Skip known fields that we don't care about checking for snippet data
                 if (in_array($resultField, ['_meta', 'id', 'record_base_class', 'record_id'])) {
@@ -222,7 +223,7 @@ class SearchResult extends ViewableData
             }
 
             // Build data required to process the clickthrough link
-            if ($this->config()->track_clickthroughs) {
+            if ($this->config()->get('track_clickthroughs')) {
                 $obj->setField('ClickthroughLink', $this->getClickthroughLink($result, $obj));
             }
 
@@ -242,14 +243,16 @@ class SearchResult extends ViewableData
         }
 
         $pageSize = $response['meta']['page']['size'];
+        $pageLimit = $this->config()->get('elastic_page_limit') ?? 0;
+        $resultsLimit = $this->config()->get('elastic_results_limit') ?? 0;
 
         // Calculate the total paginated results that can be handled, taking into account the default elastic limits.
         // The page size also needs to be considered here so that we only handle the number of results rendered
         // on the first 100 pages (elastic_page_limit * $pageSize).
         $totalResults = min([
-            $response['meta']['page']['total_results'],
-            $this->config()->elastic_page_limit * $pageSize,
-            $this->config()->elastic_results_limit
+            $response['meta']['page']['total_results'] ?? 0,
+            $pageLimit * $pageSize,
+            $resultsLimit
         ]);
 
         // Convert the ArrayList we have into a PaginatedList so we can access pagination features within templates
@@ -276,6 +279,7 @@ class SearchResult extends ViewableData
         foreach ($response['facets'] as $property => $results) {
             foreach ($results as $index => $result) {
                 $data = ArrayList::create();
+
                 foreach ($result['data'] as $resultData) {
                     $data->push(ArrayData::create([
                         'Value' => $resultData['value'] ?? '',
@@ -328,7 +332,7 @@ class SearchResult extends ViewableData
             throw new InvalidArgumentException('Expected value for meta.request_id not found');
         }
 
-        // Ensure 'results' is a multi-dimensional array (an array containing arrays)
+        // Ensure 'results' is a multidimensional array (an array containing arrays)
         if (!is_array($response['results'])) {
             throw new InvalidArgumentException('Expected results key of Elastic App Search response to be an array');
         }
@@ -353,8 +357,8 @@ class SearchResult extends ViewableData
     private function getClickthroughLink($result, DataObject $dataObject): string
     {
         $controllerLink = ClickthroughController::get_base_url();
-        $documentId = isset($result['id']['raw']) ? $result['id']['raw'] : null;
-        $requestId = isset($this->response['meta']['request_id']) ? $this->response['meta']['request_id'] : null;
+        $documentId = $result['id']['raw'] ?? null;
+        $requestId = $this->response['meta']['request_id'] ?? null;
 
         $data = [
             'id' => $dataObject->ID,
