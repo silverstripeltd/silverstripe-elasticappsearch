@@ -45,6 +45,17 @@ class SearchResult extends ViewableData
     private static $track_clickthroughs = true;
 
     /**
+     * Elastic has a default limit of handling 100 pages. If you request a page beyond this limit
+     * then an error occurs. We use this to limit the number of pages that are returned.
+     */
+    private static $elastic_page_limit = 100;
+
+    /**
+     * Elastic has a default limit of 10000 results returned in a single query
+     */
+    private static $elastic_results_limit = 10000;
+
+    /**
      * @var LoggerInterface
      */
     public $logger;
@@ -149,12 +160,12 @@ class SearchResult extends ViewableData
 
         return ArrayList::create();
     }
-    
+
     public function getSpellingSuggestions(): ?ArrayList
     {
         return $this->spellingSuggestions;
     }
-    
+
     public function setSpellingSuggestions(ArrayList $suggestions): self
     {
         $this->spellingSuggestions = $suggestions;
@@ -244,11 +255,22 @@ class SearchResult extends ViewableData
             }
         }
 
+        $pageSize = $response['meta']['page']['size'];
+
+        // Calculate the total paginated results that can be handled, taking into account the default elastic limits.
+        // The page size also needs to be considered here so that we only handle the number of results rendered
+        // on the first 100 pages (elastic_page_limit * $pageSize).
+        $totalResults = min([
+            $response['meta']['page']['total_results'],
+            $this->config()->elastic_page_limit * $pageSize,
+            $this->config()->elastic_results_limit
+        ]);
+
         // Convert the ArrayList we have into a PaginatedList so we can access pagination features within templates
         $list = PaginatedList::create($list);
         $list->setLimitItems(false);
-        $list->setPageLength($response['meta']['page']['size']);
-        $list->setTotalItems($response['meta']['page']['total_results']);
+        $list->setPageLength($pageSize);
+        $list->setTotalItems($totalResults);
         $list->setCurrentPage($response['meta']['page']['current']);
 
         return $list;
