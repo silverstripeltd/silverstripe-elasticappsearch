@@ -19,7 +19,8 @@
     "require": {
         "php": "^8.1",
         "elastic/enterprise-search": "^8.7",
-        "silverstripe/framework": "^5"
+        "silverstripe/framework": "^5",
+        "psr/log" : "^3"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "^3",
