@@ -28,6 +28,11 @@ class SearchQuery
     /**
      * @var stdClass
      */
+    private $rawBoosts;
+
+    /**
+     * @var stdClass
+     */
     private $rawFacets;
 
     /**
@@ -177,6 +182,23 @@ class SearchQuery
     }
 
     /**
+     * Sets the raw 'boosts' attribute so that dynamic boosting can be applied with the search query rather than hard set
+     * in the elastic dashboard. This is useful where multiple search pages need to order results differently.
+     *
+     * See the docs for help:
+     * https://swiftype.com/documentation/app-search/api/search/boosts
+     *
+     * @param stdClass $boosts
+     * @return $this
+     */
+
+    public function addRawBoosts(stdClass $boosts): self
+    {
+        $this->rawBoosts = $boosts;
+        return $this;
+    }
+
+    /**
      * Add a sort method to the list, see:
      * https://www.elastic.co/guide/en/app-search/current/sort.html
      *
@@ -255,6 +277,10 @@ class SearchQuery
 
         if (isset($this->rawFacets)) {
             $query['facets'] = $this->rawFacets;
+        }
+
+        if (isset($this->rawBoosts)) {
+            $query['boosts'] = $this->rawBoosts;
         }
 
         if (isset($this->sort)) {
