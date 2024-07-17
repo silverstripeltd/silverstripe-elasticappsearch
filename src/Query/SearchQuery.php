@@ -36,6 +36,8 @@ class SearchQuery
 
     private ?int $pageNum = null;
 
+    private ?SimpleObject $group = null;
+
     /**
      * Set the query string that all documents must match in order to be returned. This can be set to an empty string to
      * return all documents. This can be useful for example when you want to return all documents that match a
@@ -181,6 +183,12 @@ class SearchQuery
         return $this;
     }
 
+    public function addGroup(SimpleObject $group)
+    {
+        $this->group = $group;
+    }
+
+
     public function addResultField(string $field, string $type = 'raw', int $size = 0)
     {
         if (!isset($this->resultFields)) {
@@ -235,6 +243,10 @@ class SearchQuery
 
         if (isset($this->pageNum, $this->pageSize)) {
             $query->page = $this->getPaginationForRequest();
+        }
+
+        if (isset($this->group)) {
+            $query->group = $this->group;
         }
 
         return $query;
