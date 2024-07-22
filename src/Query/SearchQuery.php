@@ -183,11 +183,17 @@ class SearchQuery
         return $this;
     }
 
-    public function addGroup(SimpleObject $group)
+    public function addGroup(SimpleObject $group): self
     {
         $this->group = $group;
+
+        return $this;
     }
 
+    public function removeGroup(): void
+    {
+        $this->group = null;
+    }
 
     public function addResultField(string $field, string $type = 'raw', int $size = 0)
     {
