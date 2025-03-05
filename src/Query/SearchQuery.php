@@ -3,6 +3,7 @@
 namespace SilverStripe\ElasticAppSearch\Query;
 
 use Elastic\EnterpriseSearch\AppSearch\Schema\PaginationResponseObject;
+use Elastic\EnterpriseSearch\AppSearch\Schema\SearchBoosts;
 use Elastic\EnterpriseSearch\AppSearch\Schema\SearchFields;
 use Elastic\EnterpriseSearch\AppSearch\Schema\SearchRequestParams;
 use Elastic\EnterpriseSearch\AppSearch\Schema\SimpleObject;
@@ -26,7 +27,7 @@ class SearchQuery
 
     private ?SimpleObject $rawFacets = null;
 
-    private ?SimpleObject $rawBoosts = null;
+    private ?SearchBoosts $rawBoosts = null;
 
     private ?array $resultFields = null;
 
@@ -161,7 +162,7 @@ class SearchQuery
      * See the docs for help:
      * https://swiftype.com/documentation/app-search/api/search/boosts
      */
-    public function addRawBoosts(SimpleObject $boosts): self
+    public function addRawBoosts(SearchBoosts $boosts): self
     {
         $this->rawBoosts = $boosts;
 
