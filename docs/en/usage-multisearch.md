@@ -29,7 +29,7 @@ use SilverStripe\ElasticAppSearch\Query\SearchQuery;
 use SilverStripe\ElasticAppSearch\Service\AppSearchService;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Core\Injector\Injector;
-use stdClass;
+use Elastic\EnterpriseSearch\AppSearch\Schema\SimpleObject;
 
 /*...*/
 
@@ -38,7 +38,7 @@ $service = AppSearchService::create();
 $keywordQuery = SearchQuery::create();
 $keywordQuery->setQuery('biscuits');
 
-$keywordFilters = new stdClass();
+$keywordFilters = new SimpleObject();
 $keywordFilters->all = [];
 $keywordFilters->all[] = (object) ['content_type' => ['page']];
 $keywordQuery->addRawFilters($keywordFilters);
@@ -47,7 +47,7 @@ $contentTypeQuery = SearchQuery::create();
 $contentTypeQuery->setQuery('biscuits');
 $contentTypeQuery->setPagination(0, 1);
 
-$facets = new stdClass();
+$facets = new SimpleObject();
 $facets->content_type = [];
 $facets->content_type[] = (object) [
     'type' => 'value',
