@@ -25,7 +25,12 @@ class ClickthroughController extends Controller
         'index',
     ];
 
-    private static string $base_url = '_click';
+   /**
+    * url should match director rules [defined in config](/_config/analytics.yml)
+    *
+    * @config
+    */
+    private static string $base_url = '/_click';
 
     /**
      * @param HTTPRequest $request
